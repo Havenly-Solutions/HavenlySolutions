@@ -79,74 +79,110 @@ class _AuthChoiceScreenState extends State<AuthChoiceScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Spacer(),
-              // Logo mark
-              const Center(
-                child: Icon(
-                  Icons.shield,
-                  color: Color(0xFF00BCD4),
-                  size: 56,
+      body: Stack(
+        children: [
+          // Background image (top 55%)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.55,
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/auth_background.jpg'),
+                  fit: BoxFit.cover,
                 ),
               ),
-              const SizedBox(height: 28),
-              Center(
-                child: Text(
-                  AppTranslations.t('auth_choice_title'),
-                  style: const TextStyle(
-                    color: Color(0xFF000000),
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  AppTranslations.t('auth_choice_sub'),
-                  style: TextStyle(
-                    color: Color(0xFF757575),
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const Spacer(),
-              // Sign Up — always active
-              _AuthButton(
-                label: AppTranslations.t('sign_up'),
-                filled: true,
-                onTap: () =>
-                    Navigator.pushNamed(context, AppRoutes.signup),
-              ),
-              const SizedBox(height: 14),
-              // Login — grayed out if no account
-              _AuthButton(
-                label: AppTranslations.t('login'),
-                filled: false,
-                disabled: !_hasAccount,
-                disabledHint: AppTranslations.t('login_disabled'),
-                onTap: _hasAccount
-                    ? () => Navigator.pushNamed(context, AppRoutes.pin)
-                    : null,
-              ),
-              const SizedBox(height: 14),
-              // Guest
-              _AuthButton(
-                label: AppTranslations.t('guest_mode'),
-                filled: false,
-                ghost: true,
-                onTap: _showGuestWarning,
-              ),
-              const SizedBox(height: 32),
-            ],
+            ),
           ),
-        ),
+          // White card sliding up from bottom
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.55,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Spacer(),
+                      // Logo mark
+                      const Center(
+                        child: Icon(
+                          Icons.shield,
+                          color: Color(0xFF00BCD4),
+                          size: 56,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Center(
+                        child: Text(
+                          AppTranslations.t('auth_choice_title'),
+                          style: const TextStyle(
+                            color: Color(0xFF000000),
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Text(
+                          AppTranslations.t('auth_choice_sub'),
+                          style: TextStyle(
+                            color: Color(0xFF757575),
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const Spacer(),
+                      // Sign Up — always active
+                      _AuthButton(
+                        label: AppTranslations.t('sign_up'),
+                        filled: true,
+                        onTap: () =>
+                            Navigator.pushNamed(context, AppRoutes.signup),
+                      ),
+                      const SizedBox(height: 14),
+                      // Login — grayed out if no account
+                      _AuthButton(
+                        label: AppTranslations.t('login'),
+                        filled: false,
+                        disabled: !_hasAccount,
+                        disabledHint: AppTranslations.t('login_disabled'),
+                        onTap: _hasAccount
+                            ? () => Navigator.pushNamed(context, AppRoutes.pin)
+                            : null,
+                      ),
+                      const SizedBox(height: 14),
+                      // Guest
+                      _AuthButton(
+                        label: AppTranslations.t('guest_mode'),
+                        filled: false,
+                        ghost: true,
+                        onTap: _showGuestWarning,
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -221,5 +257,4 @@ class _AuthButton extends StatelessWidget {
       ),
     );
   }
-}
 }

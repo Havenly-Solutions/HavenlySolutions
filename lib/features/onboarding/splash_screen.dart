@@ -69,7 +69,7 @@ class _SplashScreenState extends State<SplashScreen>
         Navigator.pushReplacementNamed(context, AppRoutes.auth);
       }
     } catch (e) {
-      print('Error in splash screen routing: $e');
+      debugPrint('Error in splash screen routing: $e');
     }
   }
 
@@ -82,7 +82,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: RepaintBoundary(
         child: Stack(
           fit: StackFit.expand,
@@ -90,8 +90,8 @@ class _SplashScreenState extends State<SplashScreen>
             // Background image with cover fit
             ColorFiltered(
               colorFilter: ColorFilter.mode(
-                Colors.black.withOpacity(0.3),
-                BlendMode.darken,
+                Colors.white.withOpacity(0.9),
+                BlendMode.lighten,
               ),
               child: Image.asset(
                 'assets/images/GBV.png',
@@ -100,9 +100,9 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
             
-            // Dark overlay
+            // Light overlay
             Container(
-              color: Colors.black.withOpacity(0.55),
+              color: Colors.white.withOpacity(0.7),
             ),
 
           // Center content
@@ -117,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen>
                     const Text(
                       'Havenly Solutions',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFF000000),
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 2,
@@ -128,7 +128,7 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'Your Haven. Your Community. Always On.',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Color(0xFF757575),
                         fontSize: 13,
                       ),
                       textAlign: TextAlign.center,
@@ -221,7 +221,7 @@ class _SlideToBeginWidgetState extends State<_SlideToBeginWidget> {
           Container(
             height: 50,
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A), // Dark track
+              color: const Color(0xFFF5F5F5), // Light track
               borderRadius: BorderRadius.circular(25),
             ),
           ),
@@ -231,7 +231,7 @@ class _SlideToBeginWidgetState extends State<_SlideToBeginWidget> {
             child: Text(
               'Slide to Begin',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Color(0xFF757575),
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -245,7 +245,7 @@ class _SlideToBeginWidgetState extends State<_SlideToBeginWidget> {
               height: 50,
               width: 60,
               decoration: BoxDecoration(
-                color: Colors.red, // Red thumb
+                color: const Color(0xFF00BCD4), // Teal thumb
                 borderRadius: BorderRadius.circular(25),
               ),
               child: Icon(

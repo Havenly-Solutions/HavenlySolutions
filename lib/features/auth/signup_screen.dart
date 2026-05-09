@@ -96,21 +96,85 @@ class _SignupScreenState extends State<SignupScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Color(0xFF000000)),
-        elevation: 0,
-        title: Text(
-          AppTranslations.t('signup_title'),
-          style: const TextStyle(color: Color(0xFF000000), fontSize: 16),
-        ),
-      ),
-      body: SafeArea(
-        child: _step == 0
-            ? _buildPhoneStep()
-            : _step == 1
-                ? _buildDetailsStep()
-                : _buildPinStep(),
+      body: Stack(
+        children: [
+          // Background image (top 55%)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.55,
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/auth_background.jpg'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          // White card sliding up from bottom
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.55,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  children: [
+                    // App bar in card
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              if (_step > 0) {
+                                setState(() => _step--);
+                              } else {
+                                Navigator.pop(context);
+                              }
+                            },
+                            icon: const Icon(Icons.arrow_back, color: Color(0xFF000000)),
+                          ),
+                          Expanded(
+                            child: Text(
+                              AppTranslations.t('signup_title'),
+                              style: const TextStyle(
+                                color: Color(0xFF000000),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(width: 48), // Balance the back button
+                        ],
+                      ),
+                    ),
+                    // Content
+                    Expanded(
+                      child: _step == 0
+                          ? _buildPhoneStep()
+                          : _step == 1
+                              ? _buildDetailsStep()
+                              : _buildPinStep(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -300,7 +364,7 @@ class _Field extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF000000)),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: Color(0xFF757575)),
