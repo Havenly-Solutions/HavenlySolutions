@@ -8,7 +8,12 @@ class OfflineQueueService {
   factory OfflineQueueService() => _instance;
   OfflineQueueService._internal();
 
-  Future<void> enqueue(String endpoint, String method, dynamic payload) async {
+  Future<void> enqueue(
+    String endpoint,
+    String method,
+    dynamic payload, {
+    int maxRetries = 3,
+  }) async {
     final db = await LocalDb.db;
     await db.insert('offline_queue', {
       'id': const Uuid().v4(),
@@ -17,6 +22,7 @@ class OfflineQueueService {
       'payload': payload != null ? jsonEncode(payload) : null,
       'created_at': DateTime.now().millisecondsSinceEpoch,
       'retry_count': 0,
+      'max_retries': maxRetries,
       'status': 'PENDING',
     });
   }
@@ -36,9 +42,11 @@ class OfflineQueueService {
 
     for (var item in pending) {
       try {
-        final String method = item['method'];
-        final String endpoint = item['endpoint'];
-        final dynamic payload = item['payload'] != null ? jsonDecode(item['payload']) : null;
+        final String method = item['method'] as String;
+        final String endpoint = item['endpoint'] as String;
+        final dynamic payload =
+            item['payload'] != null ? jsonDecode(item['payload'] as String) : null;
+        final int maxRetries = (item['max_retries'] as int?) ?? 3;
 
         switch (method) {
           case 'POST':
@@ -62,12 +70,12 @@ class OfflineQueueService {
           whereArgs: [item['id']],
         );
       } catch (e) {
-        final int retryCount = item['retry_count'] + 1;
+        final int retryCount = (item['retry_count'] as int) + 1;
         await db.update(
           'offline_queue',
           {
             'retry_count': retryCount,
-            'status': retryCount >= 3 ? 'FAILED' : 'PENDING',
+            'status': retryCount >= maxRetries ? 'FAILED' : 'PENDING',
           },
           where: 'id = ?',
           whereArgs: [item['id']],

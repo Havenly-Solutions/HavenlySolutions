@@ -26,6 +26,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Havenly Solutions uses Face ID to confirm it is you before asking for your PIN.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -66,5 +68,37 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>Havenly Solutions uses your location to send it to emergency services
+  when you trigger an SOS alert.</string>
+
+  <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+  <string>Havenly Solutions needs background location to keep broadcasting your
+  position to emergency services during an active SOS alert.</string>
+
+  <key>NSLocationAlwaysUsageDescription</key>
+  <string>Havenly Solutions needs always-on location during an active SOS so
+  emergency services can track your position in real time.</string>
+
+  <key>NSBluetoothAlwaysUsageDescription</key>
+  <string>Havenly Solutions uses Bluetooth to broadcast emergency alerts to
+  nearby Havenly Solutions users when you have no cell or internet signal.</string>
+
+  <key>NSBluetoothPeripheralUsageDescription</key>
+  <string>Havenly Solutions uses Bluetooth to relay SOS alerts through nearby
+  devices when no other signal is available.</string>
+
+  <key>UIBackgroundModes</key>
+  <array>
+    <string>location</string>
+    <string>fetch</string>
+    <string>processing</string>
+    <string>bluetooth-central</string>
+    <string>bluetooth-peripheral</string>
+  </array>
+
+  <key>NFCUsageDescription</key>
+  <string>Not used by Havenly Solutions.</string>
 </dict>
 </plist>

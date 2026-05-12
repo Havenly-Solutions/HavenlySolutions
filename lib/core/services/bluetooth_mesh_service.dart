@@ -11,7 +11,7 @@
  *   1. Device A triggers SOS. No signal of any kind.
  *   2. Device A broadcasts a signed SOS packet over BT to
  *      all nearby devices using Nearby Connections API.
- *   3. Device B (a nearby Havenly user) receives the packet.
+ *   3. Device B (a nearby Havenly Solutions user) receives the packet.
  *      Device B may have cell signal or internet.
  *   4. Device B verifies the packet signature (preventing spoofing).
  *   5. Device B relays the SOS to the backend on behalf of Device A.
@@ -23,7 +23,7 @@
  *   hash — just enough to verify identity server-side), last known
  *   GPS coordinates, and a timestamp. It is signed with a session
  *   key derived from the user's auth token. A relay device cannot
- *   read the personal data — it only knows it is a valid Havenly
+ *   read the personal data — it only knows it is a valid Havenly Solutions
  *   SOS packet to relay.
  *
  *   PLATFORM:
@@ -42,7 +42,7 @@
  * HOW TO EXTEND:
  *   Phase 7 uses this for SOS relay only.
  *   Phase 9 (community chat) can use this for offline local chat
- *   between nearby Havenly users with zero infrastructure.
+ *   between nearby Havenly Solutions users with zero infrastructure.
  * ─────────────────────────────────────────────────────────────
  */
 
@@ -50,10 +50,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:nearby_connections/nearby_connections.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../security/secure_storage_service.dart';
 
 class BluetoothMeshService {
-  static const _serviceId = 'com.theblacksheep.havenly.sos_mesh';
+  static const _serviceId = 'com.theblacksheep.havenly_solutions.sos_mesh';
   static const _strategy = Strategy.P2P_CLUSTER;
 
   static bool _isAdvertising = false;
@@ -61,7 +62,7 @@ class BluetoothMeshService {
 
   static bool get isActive => _isAdvertising || _isDiscovering;
 
-  /// Broadcast an SOS packet to all nearby Havenly devices.
+  /// Broadcast an SOS packet to all nearby Havenly Solutions devices.
   /// Called immediately when SOS is triggered on Android devices.
   /// The packet is signed so relay devices can verify authenticity.
   static Future<bool> broadcastSos({
@@ -82,7 +83,7 @@ class BluetoothMeshService {
         triggeredAt: triggeredAt,
       );
 
-      final hasPermission = await Nearby().checkBluetoothPermission();
+      final hasPermission = await _checkPermissions();
       if (!hasPermission) return false;
 
       // Start advertising so nearby devices discover this device.
@@ -98,7 +99,7 @@ class BluetoothMeshService {
           );
         },
         onConnectionResult: (endpointId, status) {
-          if (status.status == Status.CONNECTED) {
+          if (status == Status.CONNECTED) {
             // Send the SOS packet to the connected relay device.
             Nearby().sendBytesPayload(
               endpointId,
@@ -120,14 +121,14 @@ class BluetoothMeshService {
 
   /// Start listening for SOS packets from nearby devices that need relay.
   /// Call this on every app start so the device is always ready to relay.
-  /// This is what makes every Havenly user a potential relay node.
+  /// This is what makes every Havenly Solutions user a potential relay node.
   static Future<void> startRelayListener({
     required void Function(MeshSosPacket packet) onSosReceived,
   }) async {
     if (!Platform.isAndroid) return;
 
     try {
-      final hasPermission = await Nearby().checkBluetoothPermission();
+      final hasPermission = await _checkPermissions();
       if (!hasPermission) return;
 
       final userId = await SecureStorageService.getUserId() ?? 'unknown';
@@ -137,7 +138,7 @@ class BluetoothMeshService {
         _strategy,
         serviceId: _serviceId,
         onEndpointFound: (endpointId, name, serviceId) {
-          // Connect to any device broadcasting a Havenly SOS.
+          // Connect to any device broadcasting a Havenly Solutions SOS.
           Nearby().requestConnection(
             userId,
             endpointId,
@@ -182,6 +183,17 @@ class BluetoothMeshService {
 
   // ── PRIVATE ──────────────────────────────────────────────────
 
+  static Future<bool> _checkPermissions() async {
+    final status = await [
+      Permission.location,
+      Permission.bluetoothScan,
+      Permission.bluetoothAdvertise,
+      Permission.bluetoothConnect,
+    ].request();
+
+    return status.values.every((s) => s.isGranted);
+  }
+
   static void _onRelayReceived(String endpointId, Payload payload) {
     // This device is the broadcaster — receiving acknowledgement.
     debugPrint('[BT Mesh] Relay acknowledged by $endpointId');
@@ -209,7 +221,7 @@ class BluetoothMeshService {
 
   static Future<String> _getDisplayName() async {
     final id = await SecureStorageService.getUserId();
-    return 'havenly_${id?.substring(0, 8) ?? 'user'}';
+    return 'havenly_solutions_${id?.substring(0, 8) ?? 'user'}';
   }
 }
 

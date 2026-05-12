@@ -12,6 +12,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -21,9 +22,10 @@ android {
     defaultConfig {
         applicationId = "com.theblacksheep.havenly"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -31,6 +33,11 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    implementation("androidx.multidex:multidex:2.0.1")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
 }
 
 flutter {

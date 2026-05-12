@@ -9,8 +9,8 @@ class AuthProvider extends ChangeNotifier {
   Future<void> tryAutoLogin() async {
     final prefs = await SharedPreferences.getInstance();
     final hasAccount = prefs.getBool('has_account') ?? false;
-    final seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
-    _isLoggedIn = hasAccount && seenOnboarding;
+    final pin = prefs.getString('user_pin') ?? '';
+    _isLoggedIn = hasAccount && pin.isNotEmpty;
     notifyListeners();
   }
 

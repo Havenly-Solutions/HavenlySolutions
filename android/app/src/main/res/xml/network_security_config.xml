@@ -3,7 +3,7 @@
   <!-- Only trust our specific backend domain. Prevents MITM attacks. -->
   <!-- Phase 21 adds certificate pinning hashes here. -->
   <domain-config cleartextTrafficPermitted="false">
-    <domain includeSubdomains="true">havenly.app</domain>
+    <domain includeSubdomains="true">havenly.solutions</domain>
     <trust-anchors>
       <certificates src="system" />
     </trust-anchors>

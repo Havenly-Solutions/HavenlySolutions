@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/providers/auth_provider.dart';
-import '../../core/providers/language_provider.dart';
 import '../../core/constants/translations.dart';
 import '../../app/routes.dart';
 
@@ -13,246 +10,153 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _textController;
-  late Animation<double> _textFade;
+class _SplashScreenState extends State<SplashScreen> {
+  double _slidePosition = 0.0;
+  bool _navigated = false;
 
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      precacheImage(const AssetImage('assets/images/GBV.png'), context);
-    });
-
-    _textController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-
-    // Welcome text fades in after 500ms delay
-    _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _textController,
-        curve: Curves.easeIn,
-      ),
-    );
-
-    // Start animation after 500ms delay
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        _textController.forward();
-      }
-    });
+    // Force English specifically on this screen initialization to be absolutely sure
+    AppTranslations.setLanguage('en');
   }
 
-  Future<void> _route() async {
-    try {
-      if (!mounted) return;
+  Future<void> _onSlideComplete() async {
+    if (_navigated) return;
+    _navigated = true;
 
-      //load language into Provider
-      await context.read<LanguageProvider>().loadSavedLanguage();
-      if (!mounted) return;
+    final prefs = await SharedPreferences.getInstance();
+    final seenLanguage = prefs.getBool('seen_language') ?? false;
+    final seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+    final hasAccount = prefs.getBool('has_account') ?? false;
 
-      final prefs = await SharedPreferences.getInstance();
-      final seenLanguage = prefs.getBool('seen_language') ?? false;
-      final auth = context.read<AuthProvider>();
-      await auth.tryAutoLogin();
-      if (!mounted) return;
+    if (!mounted) return;
 
-      if (!seenLanguage) {
-        Navigator.pushReplacementNamed(context, AppRoutes.language);
-      } else if (auth.isLoggedIn) {
-        Navigator.pushReplacementNamed(context, AppRoutes.pin);
-      } else {
-        Navigator.pushReplacementNamed(context, AppRoutes.auth);
-      }
-    } catch (e) {
-      debugPrint('Error in splash screen routing: $e');
+    if (!seenLanguage) {
+      Navigator.pushReplacementNamed(context, AppRoutes.language);
+    } else if (!hasAccount) {
+      Navigator.pushReplacementNamed(context, AppRoutes.auth);
+    } else if (!seenOnboarding) {
+      Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
+    } else {
+      Navigator.pushReplacementNamed(context, AppRoutes.pin);
     }
   }
 
   @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // We don't watch language provider here because splash is always English
+    final screenWidth = MediaQuery.of(context).size.width;
+    final slideWidth = screenWidth - 64;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: RepaintBoundary(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Background image with cover fit
-            ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                Colors.white.withOpacity(0.9),
-                BlendMode.lighten,
-              ),
-              child: Image.asset(
-                'assets/images/GBV.png',
-                fit: BoxFit.cover,
-                cacheWidth: 800,
-              ),
-            ),
-            
-            // Light overlay
-            Container(
-              color: Colors.white.withOpacity(0.7),
-            ),
-
-          // Center content
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Welcome text with fade animation
-              FadeTransition(
-                opacity: _textFade,
-                child: Column(
-                  children: [
-                    const Text(
-                      'Havenly Solutions',
-                      style: TextStyle(
-                        color: Color(0xFF000000),
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Your Haven. Your Community. Always On.',
-                      style: TextStyle(
-                        color: Color(0xFF757575),
-                        fontSize: 13,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // Slide to begin widget at bottom
-          Positioned(
-            bottom: 40,
-            left: 20,
-            right: 20,
-            child: _SlideToBeginWidget(
-              onSlideComplete: _route,
-            ),
-          ),
-        ],
-      ),
-      ),
-    );
-  }
-}
-
-class _SlideToBeginWidget extends StatefulWidget {
-  final VoidCallback onSlideComplete;
-
-  const _SlideToBeginWidget({required this.onSlideComplete});
-
-  @override
-  State<_SlideToBeginWidget> createState() => _SlideToBeginWidgetState();
-}
-
-class _SlideToBeginWidgetState extends State<_SlideToBeginWidget> {
-  double _dragOffset = 0.0;
-  late double _maxDragDistance;
-  bool _completed = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _maxDragDistance = MediaQuery.of(context).size.width - 60 - 60; // width - left/right padding - thumb width
-  }
-
-  void _handleDragUpdate(DragUpdateDetails details) {
-    if (_completed) return;
-
-    setState(() {
-      _dragOffset = (_dragOffset + details.delta.dx).clamp(0.0, _maxDragDistance);
-    });
-
-    // Check if slider has reached the end
-    if (_dragOffset >= _maxDragDistance * 0.9) {
-      _complete();
-    }
-  }
-
-  void _handleDragEnd(DragEndDetails details) {
-    if (_completed) return;
-
-    // Snap back if not completed
-    if (_dragOffset < _maxDragDistance * 0.9) {
-      setState(() {
-        _dragOffset = 0.0;
-      });
-    }
-  }
-
-  void _complete() {
-    setState(() {
-      _completed = true;
-      _dragOffset = _maxDragDistance;
-    });
-    Future.delayed(const Duration(milliseconds: 200), () {
-      widget.onSlideComplete();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onHorizontalDragUpdate: _handleDragUpdate,
-      onHorizontalDragEnd: _handleDragEnd,
-      child: Stack(
-        alignment: Alignment.centerLeft,
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          // Track background
+          Image.asset(
+            'assets/images/Stay safe.png',
+            fit: BoxFit.cover,
+          ),
           Container(
-            height: 50,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5), // Light track
-              borderRadius: BorderRadius.circular(25),
-            ),
+            color: Colors.black.withOpacity(0.4),
           ),
-
-          // Center text
-          Center(
-            child: Text(
-              'Slide to Begin',
-              style: TextStyle(
-                color: Color(0xFF757575),
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-
-          // Draggable thumb
-          Transform.translate(
-            offset: Offset(_dragOffset, 0),
-            child: Container(
-              height: 50,
-              width: 60,
-              decoration: BoxDecoration(
-                color: const Color(0xFF00BCD4), // Teal thumb
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Icon(
-                Icons.arrow_forward,
-                color: Colors.white,
-                size: 24,
-              ),
+          SafeArea(
+            child: Column(
+              children: [
+                const Spacer(flex: 2),
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 120,
+                  height: 120,
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'Havenly Solutions', // Hardcoded as English for Splash
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Your Haven. Your Community. Always on.', // Hardcoded as English for Splash
+                  style: TextStyle(
+                    color: Color(0xFFFF9800),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const Spacer(flex: 3),
+                
+                // Slide to begin
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Container(
+                    height: 64,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: Stack(
+                      children: [
+                        const Center(
+                          child: Text(
+                            'SLIDE TO BEGIN', // Hardcoded as English for Splash
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          left: _slidePosition,
+                          child: GestureDetector(
+                            onHorizontalDragUpdate: (details) {
+                              setState(() {
+                                _slidePosition += details.delta.dx;
+                                if (_slidePosition < 0) _slidePosition = 0;
+                                if (_slidePosition > slideWidth - 56) {
+                                  _slidePosition = slideWidth - 56;
+                                }
+                              });
+                            },
+                            onHorizontalDragEnd: (details) {
+                              if (_slidePosition > slideWidth * 0.7) {
+                                setState(() => _slidePosition = slideWidth - 56);
+                                _onSlideComplete();
+                              } else {
+                                setState(() => _slidePosition = 0);
+                              }
+                            },
+                            child: Container(
+                              width: 56,
+                              height: 56,
+                              margin: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: Colors.black,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 48),
+              ],
             ),
           ),
         ],

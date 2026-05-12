@@ -15,6 +15,7 @@ class User {
   final double? lastLng;
   final String? fcmToken;
   final String? avatarUrl;
+  final String? profileImagePath;
   final DateTime createdAt;
 
   User({
@@ -34,6 +35,7 @@ class User {
     this.lastLng,
     this.fcmToken,
     this.avatarUrl,
+    this.profileImagePath,
     required this.createdAt,
   });
 
@@ -55,6 +57,7 @@ class User {
       lastLng: (json['lastLng'] as num?)?.toDouble(),
       fcmToken: json['fcmToken'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
+      profileImagePath: json['profileImagePath'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
@@ -77,6 +80,7 @@ class User {
       'last_lng': lastLng,
       'fcmToken': fcmToken,
       'avatarUrl': avatarUrl,
+      'profileImagePath': profileImagePath,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -98,6 +102,7 @@ class User {
     double? lastLng,
     String? fcmToken,
     String? avatarUrl,
+    String? profileImagePath,
     DateTime? createdAt,
   }) {
     return User(
@@ -117,6 +122,7 @@ class User {
       lastLng: lastLng ?? this.lastLng,
       fcmToken: fcmToken ?? this.fcmToken,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      profileImagePath: profileImagePath ?? this.profileImagePath,
       createdAt: createdAt ?? this.createdAt,
     );
   }

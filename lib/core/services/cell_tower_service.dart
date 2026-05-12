@@ -31,7 +31,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 
 class CellTowerService {
-  static const _channel = MethodChannel('com.theblacksheep.havenly/cell_tower');
+  static const _channel = MethodChannel('com.theblacksheep.havenly_solutions/cell_tower');
 
   /// Read current cell tower registration data.
   /// Returns null on iOS or if permission is denied.

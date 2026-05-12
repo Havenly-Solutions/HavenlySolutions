@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../core/constants/translations.dart';
 import '../../core/widgets/app_background.dart';
+import '../../Shared/theme/app_theme.dart';
 
 class EmergencyNumbersScreen extends StatelessWidget {
   const EmergencyNumbersScreen({super.key});
 
   Future<void> _call(String number) async {
-    final uri = Uri.parse('tel:$number');
+    final Uri uri = Uri(scheme: 'tel', path: number);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
+    } else {
+      debugPrint('Could not launch dialer for $number');
     }
   }
 
@@ -26,10 +28,10 @@ class EmergencyNumbersScreen extends StatelessWidget {
 
     return AppBackground(
       headerTitle: 'Emergency Numbers',
-      headerSubtitle: AppTranslations.t('app_name'),
+      headerSubtitle: 'Havenly Solutions',
       showBackButton: true,
       child: ListView.builder(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         itemCount: numbers.length,
         itemBuilder: (context, index) {
           final n = numbers[index];
@@ -37,19 +39,43 @@ class EmergencyNumbersScreen extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
               color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.grey.shade100),
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              title: Text(n['name']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(n['number']!, style: TextStyle(color: Colors.grey.shade600)),
-              trailing: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(color: Color(0xFFE53935), shape: BoxShape.circle),
-                child: const Icon(Icons.phone, color: Colors.white, size: 20),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              title: Text(
+                n['name']!,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  fontFamily: 'Space Grotesk',
+                  color: Color(0xFF1A1A2E), // Fix A: High visibility Deep Navy
+                ),
               ),
-              onTap: () => _call(n['number']!),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  n['number']!,
+                  style: const TextStyle(
+                    color: Color(0xFF1A1A2E), // Fix A: High visibility Deep Navy
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              trailing: GestureDetector(
+                onTap: () => _call(n['number']!),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.primaryRed,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.phone, color: Colors.white, size: 22),
+                ),
+              ),
+              onTap: () => _call(n['number']!), // Fix B: Enable tap-to-dial on tile
             ),
           );
         },

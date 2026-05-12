@@ -6,6 +6,7 @@ class AppBackground extends StatelessWidget {
   final String? headerSubtitle;
   final double cardHeightFactor;
   final bool showBackButton;
+  final bool isCleanMode; // true for white bg, false for mountain bg
 
   const AppBackground({
     super.key,
@@ -14,23 +15,68 @@ class AppBackground extends StatelessWidget {
     this.headerSubtitle,
     this.cardHeightFactor = 0.65,
     this.showBackButton = false,
+    this.isCleanMode = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
+    if (isCleanMode) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: (headerTitle != null || showBackButton)
+            ? AppBar(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                centerTitle: true,
+                leading: showBackButton
+                    ? IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+                      )
+                    : null,
+                title: headerTitle != null
+                    ? Column(
+                        children: [
+                          Text(
+                            headerTitle!,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (headerSubtitle != null)
+                            Text(
+                              headerSubtitle!,
+                              style: const TextStyle(
+                                color: Color(0xFFFF9800),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                        ],
+                      )
+                    : null,
+              )
+            : null,
+        body: child,
+      );
+    }
+
+    // "Stay Safe.png" Background Mode for Splash/Language/Auth
     return Scaffold(
       body: Stack(
         children: [
           // Background Image
           Positioned.fill(
             child: Image.asset(
-              'assets/images/mountain top view.png',
+              'assets/images/Stay safe.png',
               fit: BoxFit.cover,
             ),
           ),
-          // Gradient Overlay for readability
+          // Gradient Overlay
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -77,7 +123,7 @@ class AppBackground extends StatelessWidget {
                     Text(
                       headerSubtitle!,
                       style: const TextStyle(
-                        color: Color(0xFFFF9800), // Orange accent like "Evernotes"
+                        color: Color(0xFFFF9800),
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                       ),

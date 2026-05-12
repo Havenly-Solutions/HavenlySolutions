@@ -18,7 +18,7 @@ class AppConfig {
   static const String sslPinSha256 = 'REPLACE_AFTER_FIRST_DEPLOY';
 
   // Feature flags
-  static const bool kUseMockData = true; // set false when backend is live
+  static const bool kUseMockData = true; // KEEP TRUE FOR OFFLINE-FIRST LOCAL TESTING
   static const bool kEnableUSSD = true;
   static const bool kEnableBTMesh = true;
   static const bool kEnableDirectSMS = true;

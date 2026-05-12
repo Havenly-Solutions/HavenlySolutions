@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
-import '../core/services/sos_orchestrator.dart';
 import '../core/services/location_service.dart';
 import '../core/services/sms_service.dart';
 import '../core/services/bluetooth_mesh_service.dart';
@@ -102,8 +101,8 @@ class SOSService {
       await _apiService.post('/api/sos/trigger', data: {
         'localId': localId,
         'triggerType': type.toString().split('.').last,
-        'latitude': position?.latitude,
-        'longitude': position?.longitude,
+        'lat': position?.latitude,
+        'lng': position?.longitude,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (_) {
@@ -115,9 +114,9 @@ class SOSService {
     LocationService.startHeartbeat(
       onUpdate: (lat, lng, accuracy) async {
         try {
-          await _apiService.post('/api/sos/$sosId/location', data: {
-            'latitude': lat,
-            'longitude': lng,
+          await _apiService.patch('/api/sos/$sosId/location', data: {
+            'lat': lat,
+            'lng': lng,
             'accuracy': accuracy,
             'timestamp': DateTime.now().toIso8601String(),
           });

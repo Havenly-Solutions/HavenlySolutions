@@ -1,10 +1,10 @@
-// First screen new users see after splash — language selection
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers/language_provider.dart';
 import '../../core/constants/translations.dart';
+import '../../core/services/permission_service.dart';
+import '../../core/widgets/app_background.dart';
 import '../../app/routes.dart';
 
 class LanguageScreen extends StatefulWidget {
@@ -15,10 +15,13 @@ class LanguageScreen extends StatefulWidget {
 }
 
 class _LanguageScreenState extends State<LanguageScreen> {
-  String _selected = 'en';
+  @override
+  void initState() {
+    super.initState();
+    PermissionService.requestSosPermissions();
+  }
 
   Future<void> _confirm() async {
-    await context.read<LanguageProvider>().setLanguage(_selected);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('seen_language', true);
     if (!mounted) return;
@@ -27,112 +30,84 @@ class _LanguageScreenState extends State<LanguageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 24),
-              Text(
-                AppTranslations.t('choose_language'),
-                style: const TextStyle(
-                  color: Color(0xFF000000),
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppTranslations.t('choose_language_sub'),
-                style: TextStyle(
-                  color: Color(0xFF757575),
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Expanded(
-                child: ListView(
-                  children: AppTranslations.languageNames.entries.map((entry) {
-                    final code = entry.key;
-                    final name = entry.value;
-                    final isSelected = _selected == code;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selected = code),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 18,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF00BCD4).withOpacity(0.12)
-                              : Color(0xFFF5F5F5),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFF00BCD4)
-                                : Color(0xFFE0E0E0),
-                            width: isSelected ? 1.5 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              name,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Color(0xFF000000)
-                                    : Color(0xFF616161),
-                                fontSize: 16,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                            if (isSelected)
-                              const Icon(
-                                Icons.check_circle,
-                                color: Color(0xFF00BCD4),
-                                size: 20,
-                              ),
-                          ],
-                        ),
+    final lp = context.watch<LanguageProvider>();
+    final selected = lp.currentLanguage;
+
+    return AppBackground(
+      headerTitle: AppTranslations.t('choose_language'),
+      headerSubtitle: AppTranslations.t('choose_language_sub'),
+      cardHeightFactor: 0.65,
+      isCleanMode: false, // Use Mountain Background
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                children: AppTranslations.languageNames.entries.map((entry) {
+                  final code = entry.key;
+                  final name = entry.value;
+                  final isSelected = selected == code;
+                  return GestureDetector(
+                    onTap: () => lp.setLanguage(code),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
                       ),
-                    );
-                  }).toList(),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.black : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Text(
+                            name,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black,
+                              fontSize: 16,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                          if (isSelected)
+                            const Positioned(
+                              right: 0,
+                              child: Icon(Icons.check_circle, color: Colors.white, size: 20),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _confirm,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  AppTranslations.t('continue_btn'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: ElevatedButton(
-                  onPressed: _confirm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00BCD4),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    AppTranslations.t('continue_btn'),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
