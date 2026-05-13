@@ -1,19 +1,16 @@
-/**
- * FILE: lib/services/device_reset_service.dart
- * PURPOSE: Wipes all local device data for this app
- * Used for: account deletion, deactivation, dev testing reset
- *
- * Clears: SQLite DB, SecureStorage, SharedPreferences,
- *         image cache, offline queue, all local files
- * Does NOT affect: backend data (handled separately)
- */
-
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import '../core/database/local_db.dart';
+
+/// FILE: lib/services/device_reset_service.dart
+/// PURPOSE: Wipes all local device data for this app
+/// Used for: account deletion, deactivation, dev testing reset
+///
+/// Clears: SQLite DB, SecureStorage, SharedPreferences,
+///         image cache, offline queue, all local files
+/// Does NOT affect: backend data (handled separately)
 
 class DeviceResetService {
   static Future<void> wipeAllLocalData() async {

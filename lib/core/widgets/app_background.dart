@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../Shared/theme/app_theme.dart';
 
 class AppBackground extends StatelessWidget {
   final Widget child;
@@ -24,16 +25,17 @@ class AppBackground extends StatelessWidget {
 
     if (isCleanMode) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         appBar: (headerTitle != null || showBackButton)
             ? AppBar(
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.surface,
                 elevation: 0,
                 centerTitle: true,
                 leading: showBackButton
                     ? IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+                        icon: const Icon(Icons.arrow_back_ios_new,
+                            color: Colors.black, size: 20),
                       )
                     : null,
                 title: headerTitle != null
@@ -84,8 +86,8 @@ class AppBackground extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.black.withOpacity(0.1),
+                    Colors.black.withValues(alpha: 0.4),
+                    Colors.black.withValues(alpha: 0.1),
                     Colors.transparent,
                   ],
                 ),
@@ -103,7 +105,8 @@ class AppBackground extends StatelessWidget {
                       alignment: Alignment.topLeft,
                       child: IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                        icon: const Icon(Icons.arrow_back_ios_new,
+                            color: Colors.white),
                       ),
                     ),
                   const SizedBox(height: 40),

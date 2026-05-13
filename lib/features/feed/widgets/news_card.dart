@@ -29,7 +29,7 @@ class NewsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -45,8 +45,15 @@ class NewsCard extends StatelessWidget {
               child: Container(
                 color: Colors.grey.shade200,
                 child: post.imageLocalPath != null
-                    ? Image.network(post.imageLocalPath!, fit: BoxFit.cover)
-                    : const Center(child: Icon(Icons.newspaper, size: 64, color: Colors.grey)),
+                    ? (post.imageLocalPath!.startsWith('http')
+                        ? Image.network(post.imageLocalPath!, fit: BoxFit.cover)
+                        : (post.imageLocalPath!.isEmpty
+                            ? const SizedBox()
+                            : Image.asset(post.imageLocalPath!,
+                                fit: BoxFit.cover)))
+                    : const Center(
+                        child: Icon(Icons.newspaper,
+                            size: 64, color: Colors.grey)),
               ),
             ),
           ),
@@ -58,7 +65,7 @@ class NewsCard extends StatelessWidget {
                 _buildCategory(post.type.name.toUpperCase()),
                 const SizedBox(height: 12),
                 Text(
-                  post.title,
+                  post.title ?? 'Untitled',
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -69,7 +76,7 @@ class NewsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  post.body,
+                  post.body ?? '',
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -101,7 +108,7 @@ class NewsCard extends StatelessWidget {
                 _buildCategory(post.type.name.toUpperCase()),
                 const SizedBox(height: 8),
                 Text(
-                  post.title,
+                  post.title ?? 'Untitled',
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -124,8 +131,14 @@ class NewsCard extends StatelessWidget {
               height: 100,
               color: Colors.grey.shade100,
               child: post.imageLocalPath != null
-                  ? Image.network(post.imageLocalPath!, fit: BoxFit.cover)
-                  : const Center(child: Icon(Icons.image_outlined, color: Colors.grey)),
+                  ? (post.imageLocalPath!.startsWith('http')
+                      ? Image.network(post.imageLocalPath!, fit: BoxFit.cover)
+                      : (post.imageLocalPath!.isEmpty
+                          ? const SizedBox()
+                          : Image.asset(post.imageLocalPath!,
+                              fit: BoxFit.cover)))
+                  : const Center(
+                      child: Icon(Icons.image_outlined, color: Colors.grey)),
             ),
           ),
         ],
@@ -137,7 +150,7 @@ class NewsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFC0392B).withOpacity(0.1),
+        color: const Color(0xFFC0392B).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(2),
       ),
       child: Text(
@@ -156,7 +169,7 @@ class NewsCard extends StatelessWidget {
     return Row(
       children: [
         Text(
-          post.authorRegion,
+          (post.authorRegion ?? 'Nationwide').toUpperCase(),
           style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
@@ -164,7 +177,11 @@ class NewsCard extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Container(width: 4, height: 4, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.grey.shade400)),
+        Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+                shape: BoxShape.circle, color: Colors.grey.shade400)),
         const SizedBox(width: 8),
         Text(
           DateFormat('HH:mm \u2022 dd MMM').format(post.createdAt),

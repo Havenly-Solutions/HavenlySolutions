@@ -87,7 +87,9 @@ class SafetyMetrics {
               'status': lastSosStatus,
               'address': lastSosAddress,
             },
-      'lastCase': lastCaseNumber == null && lastCaseType == null && lastCaseStatus == null
+      'lastCase': lastCaseNumber == null &&
+              lastCaseType == null &&
+              lastCaseStatus == null
           ? null
           : {
               'caseNumber': lastCaseNumber,

@@ -31,8 +31,27 @@ class _SignupScreenState extends State<SignupScreen> {
   final _countryController = TextEditingController();
   final _communityController = TextEditingController();
 
+  String? _selectedTitle;
+  String? _selectedGender;
   String? _selectedRace;
   String? _selectedProvince;
+
+  final List<String> _titleOptions = [
+    'Mr',
+    'Mrs',
+    'Miss',
+    'Ms',
+    'Dr',
+    'Prof',
+    'Mx',
+  ];
+
+  final List<String> _genderOptions = [
+    'male',
+    'female',
+    'non-binary',
+    'prefer_not_to_say',
+  ];
 
   final List<String> _raceOptions = [
     'African',
@@ -61,7 +80,8 @@ class _SignupScreenState extends State<SignupScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Creating your Safety PIN', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Creating your Safety PIN',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         content: const Text(
           'Your 4-digit PIN is your key to Havenly Solutions. You will use it to log in and to trigger an SOS from any device via USSD. Keep it private.',
           style: TextStyle(color: Colors.black87, fontSize: 15, height: 1.5),
@@ -69,7 +89,9 @@ class _SignupScreenState extends State<SignupScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('I UNDERSTAND', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            child: const Text('I UNDERSTAND',
+                style: TextStyle(
+                    color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -91,39 +113,52 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _handleRegister() async {
-    final userProvider = context.read<UserProvider>();
-    final deviceId = await SecureStorageService.getOrCreateDeviceId();
+    final fullName =
+        '${_nameController.text.trim()} ${_surnameController.text.trim()}';
+    final age = int.tryParse(_ageController.text.trim()) ?? 0;
+    final idNumber = _idController.text.trim();
+    final phoneNumber = _phoneController.text.trim();
+    final email = _emailController.text.trim();
+    final community = _communityController.text.trim();
     final pinRaw = _pin.join();
 
-    // NOTE: Sending raw PIN during this phase to match current 
-    // local/mock backend verification expectations.
+    final userProvider = context.read<UserProvider>();
+    final currentLang = context.read<LanguageProvider>().currentLanguage;
+
+    final deviceId = await SecureStorageService.getOrCreateDeviceId();
+    final fcmToken = await SecureStorageService.getFcmToken();
+
     final registrationData = {
-      'fullName': '${_nameController.text.trim()} ${_surnameController.text.trim()}',
-      'age': int.tryParse(_ageController.text.trim()) ?? 0,
-      'idNumber': _idController.text.trim(),
+      'fullName': fullName,
+      'title': _selectedTitle ?? '',
+      'gender': _selectedGender ?? '',
+      'age': age,
+      'idNumber': idNumber,
       'passportNumber': null,
-      'phoneNumber': _phoneController.text.trim(),
-      'email': _emailController.text.trim(),
+      'phoneNumber': phoneNumber,
+      'email': email,
       'province': _selectedProvince ?? '',
       'race': _selectedRace ?? '',
-      'community': _communityController.text.trim(),
+      'community': community,
       'emergencyContacts': <String>[],
       'pinHash': pinRaw,
       'deviceId': deviceId,
-      'preferredLanguage': context.read<LanguageProvider>().currentLanguage,
+      'fcmToken': fcmToken,
+      'preferredLanguage': currentLang,
     };
 
     final success = await userProvider.register(registrationData);
 
+    if (!mounted) return;
+
     if (success) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_phone', _phoneController.text.trim());
+      await prefs.setString('user_phone', phoneNumber);
       await prefs.setBool('has_account', true);
 
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
     } else {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(userProvider.errorMessage ?? 'Registration failed'),
@@ -172,10 +207,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
     return AppBackground(
       headerTitle: AppTranslations.t('signup_title'),
-      headerSubtitle: AppTranslations.t('app_name'),
-      cardHeightFactor: _step == 0 ? 0.38 : (_step == 2 ? 0.75 : 0.7),
+      headerSubtitle: 'Create your Havenly identity securely',
+      cardHeightFactor: _step == 0 ? 0.42 : (_step == 2 ? 0.82 : 0.78),
       showBackButton: true,
-      isCleanMode: false, 
+      isCleanMode: false,
       child: _step == 0
           ? _buildPhoneStep()
           : _step == 1
@@ -186,22 +221,19 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Widget _buildPhoneStep() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 48, 32, 32),
+      padding: const EdgeInsets.fromLTRB(32, 36, 32, 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            AppTranslations.t('phone'),
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 32),
+          const _StepHeader(
+              step: 1,
+              title: 'Phone Number',
+              subtitle: 'Enter the number you will use to access Havenly.'),
+          const SizedBox(height: 20),
           _Field(
             controller: _phoneController,
             label: AppTranslations.t('phone'),
+            hint: 'e.g. 0811234567',
             keyboardType: TextInputType.phone,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
@@ -221,13 +253,78 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Widget _buildDetailsStep() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(32, 56, 32, 32),
+      padding: const EdgeInsets.fromLTRB(32, 32, 32, 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const _StepHeader(
+              step: 2,
+              title: 'Personal Details',
+              subtitle: 'Add your title, gender and location information.'),
+          const SizedBox(height: 20),
           _Field(controller: _nameController, label: AppTranslations.t('name')),
           const SizedBox(height: 16),
-          _Field(controller: _surnameController, label: AppTranslations.t('surname')),
+          _Field(
+              controller: _surnameController,
+              label: AppTranslations.t('surname')),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: _selectedTitle,
+                  items: _titleOptions
+                      .map(
+                        (value) => DropdownMenuItem(
+                          value: value,
+                          child: Text(value),
+                        ),
+                      )
+                      .toList(),
+                  decoration: _fieldDecoration('Title'),
+                  dropdownColor: Colors.white,
+                  style: const TextStyle(color: Colors.black),
+                  onChanged: (value) => setState(() => _selectedTitle = value),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedGender,
+                  decoration: InputDecoration(
+                    labelText: 'Gender',
+                    labelStyle: TextStyle(color: Colors.grey.shade500),
+                    filled: true,
+                    fillColor: const Color(0xFF111111),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFF222222)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFF222222)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFFE53935)),
+                    ),
+                  ),
+                  dropdownColor: const Color(0xFF111111),
+                  style: const TextStyle(color: Colors.white),
+                  items: const [
+                    DropdownMenuItem(value: 'male', child: Text('Male')),
+                    DropdownMenuItem(value: 'female', child: Text('Female')),
+                    DropdownMenuItem(value: 'non-binary', child: Text('Non-binary')),
+                    DropdownMenuItem(
+                      value: 'prefer_not_to_say',
+                      child: Text('Prefer not to say'),
+                    ),
+                  ],
+                  onChanged: (v) => setState(() => _selectedGender = v),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           _Field(
             controller: _emailController,
@@ -242,36 +339,45 @@ class _SignupScreenState extends State<SignupScreen> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: _selectedRace,
-            items: _raceOptions
-                .map(
-                  (value) => DropdownMenuItem(
-                    value: value,
-                    child: Text(AppTranslations.t('race_$value')),
-                  ),
-                )
-                .toList(),
-            decoration: _fieldDecoration(AppTranslations.t('race')),
-            dropdownColor: Colors.white,
-            style: const TextStyle(color: Colors.black),
-            onChanged: (value) => setState(() => _selectedRace = value),
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: _selectedProvince,
-            items: CommunitiesService.saProvinces
-                .map(
-                  (value) => DropdownMenuItem(
-                    value: value,
-                    child: Text(value),
-                  ),
-                )
-                .toList(),
-            decoration: _fieldDecoration(AppTranslations.t('province')),
-            dropdownColor: Colors.white,
-            style: const TextStyle(color: Colors.black),
-            onChanged: (value) => setState(() => _selectedProvince = value),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: _selectedRace,
+                  items: _raceOptions
+                      .map(
+                        (value) => DropdownMenuItem(
+                          value: value,
+                          child: Text(AppTranslations.t('race_$value')),
+                        ),
+                      )
+                      .toList(),
+                  decoration: _fieldDecoration(AppTranslations.t('race')),
+                  dropdownColor: Colors.white,
+                  style: const TextStyle(color: Colors.black),
+                  onChanged: (value) => setState(() => _selectedRace = value),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: _selectedProvince,
+                  items: CommunitiesService.saProvinces
+                      .map(
+                        (value) => DropdownMenuItem(
+                          value: value,
+                          child: Text(value),
+                        ),
+                      )
+                      .toList(),
+                  decoration: _fieldDecoration(AppTranslations.t('province')),
+                  dropdownColor: Colors.white,
+                  style: const TextStyle(color: Colors.black),
+                  onChanged: (value) =>
+                      setState(() => _selectedProvince = value),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           _Field(
@@ -280,7 +386,9 @@ class _SignupScreenState extends State<SignupScreen> {
             hint: AppTranslations.t('community_hint'),
           ),
           const SizedBox(height: 16),
-          _Field(controller: _addressController, label: AppTranslations.t('address')),
+          _Field(
+              controller: _addressController,
+              label: AppTranslations.t('address')),
           const SizedBox(height: 16),
           _Field(
             controller: _idController,
@@ -289,13 +397,17 @@ class _SignupScreenState extends State<SignupScreen> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           const SizedBox(height: 16),
-          _Field(controller: _countryController, label: AppTranslations.t('country')),
-          const SizedBox(height: 32),
+          _Field(
+              controller: _countryController,
+              label: AppTranslations.t('country')),
+          const SizedBox(height: 28),
           _PrimaryButton(
             label: AppTranslations.t('next'),
             onTap: () {
               if (_nameController.text.isNotEmpty &&
                   _surnameController.text.isNotEmpty &&
+                  _selectedTitle != null &&
+                  _selectedGender != null &&
                   _emailController.text.isNotEmpty &&
                   _ageController.text.isNotEmpty &&
                   _selectedRace != null &&
@@ -305,7 +417,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   _idController.text.isNotEmpty &&
                   _countryController.text.isNotEmpty) {
                 setState(() => _step = 2);
-                WidgetsBinding.instance.addPostFrameCallback((_) => _showPinEducation());
+                WidgetsBinding.instance
+                    .addPostFrameCallback((_) => _showPinEducation());
               }
             },
           ),
@@ -319,46 +432,48 @@ class _SignupScreenState extends State<SignupScreen> {
     final currentPin = _confirmingPin ? _pinConfirm : _pin;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 56, 32, 32),
+      padding: const EdgeInsets.fromLTRB(32, 32, 32, 28),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            _confirmingPin
-                ? AppTranslations.t('confirm_pin')
-                : AppTranslations.t('create_pin'),
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          const _StepHeader(
+              step: 3,
+              title: 'Create PIN',
+              subtitle: 'Set a secure 4-digit PIN for quick access.'),
+          const SizedBox(height: 18),
           if (_pinError.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              _pinError,
-              style: const TextStyle(color: Color(0xFFE53935), fontSize: 13),
-              textAlign: TextAlign.center,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFEBEE),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                _pinError,
+                style: const TextStyle(color: Color(0xFFC0392B), fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
             ),
+            const SizedBox(height: 18),
           ],
-          const SizedBox(height: 40),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(4, (i) {
               final filled = currentPin[i].isNotEmpty;
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12),
-                width: 20,
-                height: 20,
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                width: 22,
+                height: 22,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: filled ? const Color(0xFFE53935) : Colors.grey.shade300,
+                  color:
+                      filled ? const Color(0xFFE53935) : Colors.grey.shade300,
                   border: Border.all(color: Colors.grey.shade400),
                 ),
               );
             }),
           ),
-          const Spacer(),
+          const SizedBox(height: 32),
           _Keypad(
             onDigit: (d) => _onPinDigit(d, _confirmingPin),
             onDelete: () => _onPinDelete(_confirmingPin),
@@ -386,6 +501,62 @@ class _SignupScreenState extends State<SignupScreen> {
         borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: Color(0xFFE53935), width: 1.5),
       ),
+    );
+  }
+}
+
+class _StepHeader extends StatelessWidget {
+  final int step;
+  final String title;
+  final String subtitle;
+
+  const _StepHeader(
+      {required this.step, required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE53935),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Text(
+                  '$step',
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Step $step of 3',
+              style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          title,
+          style: const TextStyle(
+              fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+        ),
+      ],
     );
   }
 }
@@ -501,7 +672,8 @@ class _Keypad extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: k == 'del'
-                    ? const Icon(Icons.backspace_outlined, color: Colors.black, size: 24)
+                    ? const Icon(Icons.backspace_outlined,
+                        color: Colors.black, size: 24)
                     : Text(
                         k,
                         style: const TextStyle(

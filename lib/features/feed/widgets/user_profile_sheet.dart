@@ -120,7 +120,8 @@ class UserProfileSheet extends StatelessWidget {
             height: 56,
             child: ElevatedButton.icon(
               onPressed: () => _openDm(context),
-              icon: const Icon(Icons.chat_bubble_outline, size: 20, color: Colors.white),
+              icon: const Icon(Icons.chat_bubble_outline,
+                  size: 20, color: Colors.white),
               label: const Text(
                 'Send Message',
                 style: TextStyle(
@@ -152,7 +153,10 @@ class UserProfileSheet extends StatelessWidget {
               ),
               child: Text(
                 'Close',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ),

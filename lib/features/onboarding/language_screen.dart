@@ -69,13 +69,16 @@ class _LanguageScreenState extends State<LanguageScreen> {
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.black,
                               fontSize: 16,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                           if (isSelected)
                             const Positioned(
                               right: 0,
-                              child: Icon(Icons.check_circle, color: Colors.white, size: 20),
+                              child: Icon(Icons.check_circle,
+                                  color: Colors.white, size: 20),
                             ),
                         ],
                       ),

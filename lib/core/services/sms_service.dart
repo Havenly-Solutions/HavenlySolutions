@@ -55,8 +55,7 @@ class SmsService {
           ? LocationService.mapsLink(latitude, longitude)
           : 'Location unavailable';
 
-      final body =
-          'HAVENLY SOLUTIONS EMERGENCY ALERT\n'
+      final body = 'HAVENLY SOLUTIONS EMERGENCY ALERT\n'
           'Someone needs immediate help.\n'
           'Location: $locationText\n'
           'This is an automated message from the Havenly Solutions safety app.';

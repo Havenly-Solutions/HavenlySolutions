@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../Shared/theme/app_theme.dart';
 import '../../core/constants/translations.dart';
 import '../../core/providers/language_provider.dart';
 import '../../core/widgets/app_background.dart';
@@ -17,7 +19,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _page = 0;
 
-  // Legal acceptance state
   bool _termsChecked = false;
   bool _privacyChecked = false;
   bool _standardsChecked = false;
@@ -57,15 +58,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool get _canProceed {
     if (_page == 6) {
       return _termsChecked &&
-          _termsAgreeController.text.trim().toUpperCase() == AppTranslations.t('terms_agree_word').toUpperCase();
+          _termsAgreeController.text.trim().toUpperCase() ==
+              AppTranslations.t('terms_agree_word').toUpperCase();
     }
     if (_page == 7) {
       return _privacyChecked &&
-          _privacyAgreeController.text.trim().toUpperCase() == AppTranslations.t('privacy_agree_word').toUpperCase();
+          _privacyAgreeController.text.trim().toUpperCase() ==
+              AppTranslations.t('privacy_agree_word').toUpperCase();
     }
     if (_page == 8) {
       return _standardsChecked &&
-          _standardsAgreeController.text.trim().toUpperCase() == AppTranslations.t('standards_agree_word').toUpperCase();
+          _standardsAgreeController.text.trim().toUpperCase() ==
+              AppTranslations.t('standards_agree_word').toUpperCase();
     }
     return true;
   }
@@ -78,9 +82,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       headerTitle: 'Havenly Solutions',
       headerSubtitle: 'Your Haven. Your Community. Always on.',
       cardHeightFactor: 0.8,
-      isCleanMode: true, // KEEP ONBOARDING IN CLEAN MODE (WHITE BG)
+      isCleanMode: true,
       child: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Step ${_page + 1} of $_totalPages',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                Text(
+                  _page >= _totalPages - 1
+                      ? AppTranslations.t('done')
+                      : AppTranslations.t('next'),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: PageView(
               controller: _pageController,
@@ -89,32 +119,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: [
                 _FeatureSlide(
                   title: 'Welcome to Safety',
-                  body: 'Your safety is our top priority. Havenly Solutions helps you move through safety tools step by step.',
+                  body:
+                      'Your safety is our top priority. Havenly Solutions helps you move through safety tools step by step.',
                   icon: Icons.security_outlined,
                 ),
                 _FeatureSlide(
                   title: 'Choose Your Language',
-                  body: 'Instructions and safety messages are available in your preferred language for better understanding.',
+                  body:
+                      'Instructions and safety messages are available in your preferred language for better understanding.',
                   icon: Icons.language_outlined,
                 ),
                 _FeatureSlide(
                   title: 'Create Your Account',
-                  body: 'Sign up to access community features and set up your private 4-digit PIN for secure access.',
+                  body:
+                      'Sign up to access community features and set up your private 4-digit PIN for secure access.',
                   icon: Icons.account_circle_outlined,
                 ),
                 _FeatureSlide(
                   title: 'Your PIN Matters',
-                  body: 'Your PIN protects your safety tools. It ensures only you can manage your emergency settings.',
+                  body:
+                      'Your PIN protects your safety tools. It ensures only you can manage your emergency settings.',
                   icon: Icons.lock_outline,
                 ),
                 _FeatureSlide(
                   title: 'Home and SOS',
-                  body: 'The Home screen gives you quick access to the SOS button. Hold it only when you need immediate help.',
+                  body:
+                      'The Home screen gives you quick access to the SOS button. Hold it only when you need immediate help.',
                   icon: Icons.emergency_outlined,
                 ),
                 _FeatureSlide(
                   title: 'Stay Connected',
-                  body: 'Communicate with your community and stay informed about safety incidents in your area.',
+                  body:
+                      'Communicate with your community and stay informed about safety incidents in your area.',
                   icon: Icons.chat_bubble_outline,
                 ),
                 _LegalSlide(
@@ -134,7 +170,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   agreeHint: AppTranslations.t('privacy_type_agree'),
                   agreeController: _privacyAgreeController,
                   checked: _privacyChecked,
-                  onChecked: (v) => setState(() => _privacyChecked = v ?? false),
+                  onChecked: (v) =>
+                      setState(() => _privacyChecked = v ?? false),
                   onAgreeChanged: () => setState(() {}),
                 ),
                 _LegalSlide(
@@ -144,7 +181,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   agreeHint: AppTranslations.t('standards_type_agree'),
                   agreeController: _standardsAgreeController,
                   checked: _standardsChecked,
-                  onChecked: (v) => setState(() => _standardsChecked = v ?? false),
+                  onChecked: (v) =>
+                      setState(() => _standardsChecked = v ?? false),
                   onAgreeChanged: () => setState(() {}),
                 ),
               ],
@@ -157,31 +195,41 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(_totalPages, (i) {
-                    return Container(
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       width: _page == i ? 24 : 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: _page == i ? Colors.black : Colors.grey.shade200,
+                        color:
+                            _page == i ? AppColors.primary : AppColors.divider,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
                   }),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
                     onPressed: _canProceed ? _next : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      disabledBackgroundColor: Colors.grey.shade100,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      backgroundColor: AppColors.primary,
+                      disabledBackgroundColor: AppColors.inputFill,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
                     ),
                     child: Text(
-                      _page >= _totalPages - 1 ? AppTranslations.t('done') : AppTranslations.t('next'),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      _page >= _totalPages - 1
+                          ? AppTranslations.t('done')
+                          : AppTranslations.t('next'),
+                      style: GoogleFonts.dmSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -198,30 +246,54 @@ class _FeatureSlide extends StatelessWidget {
   final String title;
   final String body;
   final IconData icon;
-  const _FeatureSlide({required this.title, required this.body, required this.icon});
+  const _FeatureSlide(
+      {required this.title, required this.body, required this.icon});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(40),
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: Colors.grey.shade50, shape: BoxShape.circle),
-            child: Icon(icon, size: 64, color: Colors.black),
+            width: 110,
+            height: 110,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFF5A623), Color(0xFFEB3B5A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                const BoxShadow(
+                  color: Color.fromRGBO(0, 0, 0, 0.08),
+                  blurRadius: 22,
+                  offset: Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Icon(icon, size: 48, color: Colors.white),
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 42),
           Text(
             title,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black),
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
           Text(
             body,
-            style: TextStyle(fontSize: 16, color: Colors.grey.shade600, height: 1.6),
+            style: GoogleFonts.dmSans(
+              fontSize: 16,
+              height: 1.7,
+              color: AppColors.textSecondary,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -254,26 +326,56 @@ class _LegalSlide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 32, 32, 0),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(16)),
-              child: SingleChildScrollView(
-                child: Text(body, style: TextStyle(color: Colors.grey.shade700, fontSize: 13, height: 1.6)),
-              ),
+          Text(
+            title,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: AppColors.inputFill,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: SingleChildScrollView(
+                child: Text(
+                  body,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 14,
+                    height: 1.7,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(value: checked, onChanged: onChecked, activeColor: Colors.black),
-              Expanded(child: Text(checkboxLabel, style: const TextStyle(fontSize: 12))),
+              Checkbox(
+                value: checked,
+                onChanged: onChecked,
+                activeColor: AppColors.primary,
+              ),
+              Expanded(
+                child: Text(
+                  checkboxLabel,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 13,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -283,9 +385,13 @@ class _LegalSlide extends StatelessWidget {
             decoration: InputDecoration(
               hintText: agreeHint,
               filled: true,
-              fillColor: Colors.grey.shade50,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              fillColor: AppColors.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
         ],

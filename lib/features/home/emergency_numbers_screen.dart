@@ -43,7 +43,8 @@ class EmergencyNumbersScreen extends StatelessWidget {
               border: Border.all(color: Colors.grey.shade100),
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               title: Text(
                 n['name']!,
                 style: const TextStyle(
@@ -58,7 +59,8 @@ class EmergencyNumbersScreen extends StatelessWidget {
                 child: Text(
                   n['number']!,
                   style: const TextStyle(
-                    color: Color(0xFF1A1A2E), // Fix A: High visibility Deep Navy
+                    color:
+                        Color(0xFF1A1A2E), // Fix A: High visibility Deep Navy
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -75,7 +77,8 @@ class EmergencyNumbersScreen extends StatelessWidget {
                   child: const Icon(Icons.phone, color: Colors.white, size: 22),
                 ),
               ),
-              onTap: () => _call(n['number']!), // Fix B: Enable tap-to-dial on tile
+              onTap: () =>
+                  _call(n['number']!), // Fix B: Enable tap-to-dial on tile
             ),
           );
         },

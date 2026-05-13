@@ -3,6 +3,12 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 
 import '../config/app_config.dart';
 
+/// FILE: lib/services/socket_service.dart
+/// PHASE: 17 — Real-Time SOS Broadcasting
+///
+/// Handles real-time events from the backend, including
+/// immediate SOS alerts and localized broadcasts.
+
 class SocketService extends ChangeNotifier {
   SocketService._internal();
 
@@ -12,6 +18,9 @@ class SocketService extends ChangeNotifier {
 
   io.Socket? _socket;
   bool _isConnected = false;
+
+  // Callback for global alert overlay
+  static void Function(Map<String, dynamic> data)? onSosBroadcast;
 
   bool get isConnected => _isConnected;
 
@@ -38,6 +47,7 @@ class SocketService extends ChangeNotifier {
     _socket?.off('disconnect');
     _socket?.off('connect_error');
     _socket?.off('error');
+    _socket?.off('sos:broadcast');
     _socket = null;
     _isConnected = false;
     notifyListeners();
@@ -45,7 +55,8 @@ class SocketService extends ChangeNotifier {
 
   void emit(String event, dynamic data) {
     if (_socket?.connected != true) {
-      debugPrint('[SocketService] Cannot emit "$event" because socket is not connected.');
+      debugPrint(
+          '[SocketService] Cannot emit "$event" because socket is not connected.');
       return;
     }
     _socket?.emit(event, data);
@@ -71,7 +82,7 @@ class SocketService extends ChangeNotifier {
       <String, dynamic>{
         'transports': ['websocket'],
         'autoConnect': false,
-        'query': {'token': accessToken},
+        'auth': {'token': accessToken},
       },
     );
 
@@ -85,6 +96,13 @@ class SocketService extends ChangeNotifier {
       _isConnected = false;
       debugPrint('[SocketService] Disconnected from socket.');
       notifyListeners();
+    });
+
+    _socket?.on('sos:broadcast', (data) {
+      debugPrint('[Socket] Received SOS broadcast: $data');
+      if (onSosBroadcast != null) {
+        onSosBroadcast!(Map<String, dynamic>.from(data));
+      }
     });
 
     _socket?.on('connect_error', (error) {

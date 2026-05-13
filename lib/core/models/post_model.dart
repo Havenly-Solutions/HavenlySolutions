@@ -1,7 +1,7 @@
 // File: lib/core/models/post_model.dart
 // Havenly Solutions (Pty) Ltd
 
-enum PostType { news, missingPerson }
+enum PostType { safety, police, community, news, missingPerson }
 
 class PostModel {
   final String id;

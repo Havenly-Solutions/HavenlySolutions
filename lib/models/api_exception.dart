@@ -30,5 +30,6 @@ class ApiException implements Exception {
         errorCode = 'SERVER_ERROR';
 
   @override
-  String toString() => 'ApiException: [$statusCode] $message${errorCode != null ? ' ($errorCode)' : ''}';
+  String toString() =>
+      'ApiException: [$statusCode] $message${errorCode != null ? ' ($errorCode)' : ''}';
 }

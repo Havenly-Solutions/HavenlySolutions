@@ -53,11 +53,14 @@ class CaseCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFF8A9BB0)),
+                const Icon(Icons.calendar_today_outlined,
+                    size: 14, color: Color(0xFF8A9BB0)),
                 const SizedBox(width: 6),
                 Text(
-                  DateFormat('dd MMM yyyy, HH:mm').format(caseModel.incidentDate),
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF4A5568)),
+                  DateFormat('dd MMM yyyy, HH:mm')
+                      .format(caseModel.incidentDate),
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF4A5568)),
                 ),
               ],
             ),
@@ -69,7 +72,9 @@ class CaseCard extends StatelessWidget {
                 Icon(
                   caseModel.synced ? Icons.cloud_done : Icons.cloud_off,
                   size: 14,
-                  color: caseModel.synced ? const Color(0xFF1A7A4A) : const Color(0xFFD97706),
+                  color: caseModel.synced
+                      ? const Color(0xFF1A7A4A)
+                      : const Color(0xFFD97706),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -77,7 +82,9 @@ class CaseCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: caseModel.synced ? const Color(0xFF1A7A4A) : const Color(0xFFD97706),
+                    color: caseModel.synced
+                        ? const Color(0xFF1A7A4A)
+                        : const Color(0xFFD97706),
                   ),
                 ),
               ],

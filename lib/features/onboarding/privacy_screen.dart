@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../Shared/theme/app_theme.dart';
 import '../../core/constants/translations.dart';
 import '../../core/providers/language_provider.dart';
 import '../../core/widgets/app_background.dart';
@@ -18,7 +20,9 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   final TextEditingController _controller = TextEditingController();
 
   bool get _canContinue {
-    return _agreed && _controller.text.trim().toUpperCase() == AppTranslations.t('privacy_agree_word').toUpperCase();
+    return _agreed &&
+        _controller.text.trim().toUpperCase() ==
+            AppTranslations.t('privacy_agree_word').toUpperCase();
   }
 
   @override
@@ -47,37 +51,50 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(32),
-              child: Text(
-                AppTranslations.t('privacy_body'),
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                  fontSize: 14,
-                  height: 1.6,
+              padding: const EdgeInsets.fromLTRB(28, 24, 28, 0),
+              child: Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: AppColors.inputFill,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Text(
+                  AppTranslations.t('privacy_body'),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 14,
+                    height: 1.7,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ),
           ),
           Container(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.fromLTRB(28, 20, 28, 28),
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey.shade100)),
+              color: AppColors.surface,
+              border: Border(top: BorderSide(color: AppColors.divider)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Checkbox(
                       value: _agreed,
-                      activeColor: Colors.black,
-                      onChanged: (val) => setState(() => _agreed = val ?? false),
+                      activeColor: AppColors.primary,
+                      onChanged: (val) =>
+                          setState(() => _agreed = val ?? false),
                     ),
                     Expanded(
                       child: Text(
                         AppTranslations.t('privacy_checkbox'),
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        style: GoogleFonts.dmSans(
+                          fontSize: 13,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -89,24 +106,35 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                   decoration: InputDecoration(
                     hintText: AppTranslations.t('privacy_type_agree'),
                     filled: true,
-                    fillColor: Colors.grey.shade100,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                    fillColor: AppColors.inputFill,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 22),
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
                     onPressed: _canContinue ? _onContinue : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      disabledBackgroundColor: Colors.grey.shade200,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      backgroundColor: AppColors.primary,
+                      disabledBackgroundColor: AppColors.inputFill,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
                     ),
                     child: Text(
                       AppTranslations.t('continue_btn'),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.dmSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

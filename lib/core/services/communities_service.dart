@@ -18,7 +18,7 @@ import '../database/local_db.dart';
 
 class CommunitiesService {
   static final CommunitiesService _instance = CommunitiesService._internal();
-  
+
   static const List<String> saProvinces = [
     'Eastern Cape',
     'Free State',
@@ -31,9 +31,9 @@ class CommunitiesService {
     'Western Cape',
   ];
 
-  late List<Map<String, dynamic>> _allCommunities = [];
-  late Map<String, List<Map<String, dynamic>>> _communitiesByProvince = {};
-  late Set<String> _provinces = {};
+  List<Map<String, dynamic>> _allCommunities = [];
+  final Map<String, List<Map<String, dynamic>>> _communitiesByProvince = {};
+  final Set<String> _provinces = {};
 
   CommunitiesService._internal();
 
@@ -134,4 +134,3 @@ class CommunitiesService {
 
   static double _toRadians(double degrees) => degrees * math.pi / 180;
 }
-

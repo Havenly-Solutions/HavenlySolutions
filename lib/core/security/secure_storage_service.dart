@@ -5,18 +5,18 @@ class SecureStorageService {
   // ── KEY CONSTANTS ────────────────────────────────────────────
   // All storage keys defined here. Never use raw strings elsewhere.
 
-  static const kAccessToken   = 'access_token';
-  static const kRefreshToken  = 'refresh_token';
-  static const kUserId        = 'user_id';
-  static const kUserRole      = 'user_role';
-  static const kPinHash       = 'pin_hash';
-  static const kDeviceId      = 'device_id';
-  static const kFcmToken      = 'fcm_token';
-  
+  static const kAccessToken = 'access_token';
+  static const kRefreshToken = 'refresh_token';
+  static const kUserId = 'user_id';
+  static const kUserRole = 'user_role';
+  static const kPinHash = 'pin_hash';
+  static const kDeviceId = 'device_id';
+  static const kFcmToken = 'fcm_token';
+
   // Legacy/Internal keys (preserved for internal usage if needed)
-  static const _biometricReg  = 'biometric_registered';
-  static const _sessionStart  = 'session_started_at';
-  static const _twoFaPhone    = 'twofa_phone_number';
+  static const _biometricReg = 'biometric_registered';
+  static const _sessionStart = 'session_started_at';
+  static const _twoFaPhone = 'twofa_phone_number';
 
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
@@ -41,11 +41,9 @@ class SecureStorageService {
     ]);
   }
 
-  static Future<String?> getAccessToken() =>
-      _storage.read(key: kAccessToken);
+  static Future<String?> getAccessToken() => _storage.read(key: kAccessToken);
 
-  static Future<String?> getRefreshToken() =>
-      _storage.read(key: kRefreshToken);
+  static Future<String?> getRefreshToken() => _storage.read(key: kRefreshToken);
 
   static Future<void> clearTokens() async {
     await Future.wait([
@@ -60,14 +58,12 @@ class SecureStorageService {
   static Future<void> saveUserId(String id) =>
       _storage.write(key: kUserId, value: id);
 
-  static Future<String?> getUserId() =>
-      _storage.read(key: kUserId);
+  static Future<String?> getUserId() => _storage.read(key: kUserId);
 
   static Future<void> saveUserRole(String role) =>
       _storage.write(key: kUserRole, value: role);
 
-  static Future<String?> getUserRole() =>
-      _storage.read(key: kUserRole);
+  static Future<String?> getUserRole() => _storage.read(key: kUserRole);
 
   // ── PIN MANAGEMENT ───────────────────────────────────────────
 
@@ -76,16 +72,14 @@ class SecureStorageService {
   static Future<void> savePinHash(String bcryptHash) =>
       _storage.write(key: kPinHash, value: bcryptHash);
 
-  static Future<String?> getPinHash() =>
-      _storage.read(key: kPinHash);
+  static Future<String?> getPinHash() => _storage.read(key: kPinHash);
 
   // ── DEVICE IDENTITY ──────────────────────────────────────────
 
   static Future<void> saveDeviceId(String id) =>
       _storage.write(key: kDeviceId, value: id);
 
-  static Future<String?> getDeviceId() =>
-      _storage.read(key: kDeviceId);
+  static Future<String?> getDeviceId() => _storage.read(key: kDeviceId);
 
   static Future<String> getOrCreateDeviceId() async {
     String? id = await getDeviceId();
@@ -101,13 +95,11 @@ class SecureStorageService {
   static Future<void> saveFcmToken(String token) =>
       _storage.write(key: kFcmToken, value: token);
 
-  static Future<String?> getFcmToken() =>
-      _storage.read(key: kFcmToken);
+  static Future<String?> getFcmToken() => _storage.read(key: kFcmToken);
 
   // ── BIOMETRIC ────────────────────────────────────────────────
 
-  static Future<void> setBiometricRegistered(bool value) =>
-      _storage.write(
+  static Future<void> setBiometricRegistered(bool value) => _storage.write(
         key: _biometricReg,
         value: value.toString(),
       );
@@ -122,14 +114,13 @@ class SecureStorageService {
   static Future<void> saveTwoFaPhone(String phone) =>
       _storage.write(key: _twoFaPhone, value: phone);
 
-  static Future<String?> getTwoFaPhone() =>
-      _storage.read(key: _twoFaPhone);
+  static Future<String?> getTwoFaPhone() => _storage.read(key: _twoFaPhone);
 
   // ── FULL WIPE ────────────────────────────────────────────────
 
   /// Delete all secure storage. Called on sign out and dev reset.
   static Future<void> clearAll() => _storage.deleteAll();
-  
+
   @Deprecated('Use clearAll instead')
   static Future<void> wipeAll() => clearAll();
 }

@@ -7,6 +7,7 @@ import '../models/api_exception.dart';
 import '../config/app_config.dart';
 import '../core/database/local_db.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/services/push_notification_service.dart';
 
 class UserProvider extends ChangeNotifier {
   User? _currentUser;
@@ -43,13 +44,25 @@ class UserProvider extends ChangeNotifier {
       if (!AppConfig.kUseMockData) {
         try {
           final userData = await _apiService.get('/api/auth/me');
-          _currentUser = User.fromJson(userData['user'] as Map<String, dynamic>);
+          // backend returns { success: true, data: userObject }
+          if (userData['data'] != null) {
+            _currentUser =
+                User.fromJson(userData['data'] as Map<String, dynamic>);
+          }
           final accessToken = await SecureStorageService.getAccessToken();
           if (accessToken != null) {
             await SocketService.instance.connect(accessToken);
           }
+          await syncFcmToken();
+          if (_currentUser != null) {
+            PushNotificationService.subscribeToLocalizedTopics(
+              province: _currentUser!.province,
+              communityId: _currentUser!.community,
+            );
+          }
         } catch (_) {
-          // If network fails but we have a local user, that's fine
+          // If network fails but we have a local user, that's fine.
+          // Do NOT logout here if it's a transient error.
           if (_currentUser == null) rethrow;
         }
       }
@@ -65,7 +78,30 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> login(String identifier, String hashedPin, String deviceId) async {
+  Future<String?> _ensureFcmToken() async {
+    final token = await PushNotificationService.getToken();
+    if (token == null) return null;
+    await SecureStorageService.saveFcmToken(token);
+    return token;
+  }
+
+  Future<void> syncFcmToken() async {
+    if (!isAuthenticated) return;
+    final token = await _ensureFcmToken();
+    if (token == null) return;
+
+    try {
+      await _apiService.post('/api/auth/fcm-token', data: {
+        'fcmToken': token,
+        'deviceId': await SecureStorageService.getOrCreateDeviceId(),
+      });
+    } catch (e) {
+      debugPrint('[UserProvider] syncFcmToken failed: $e');
+    }
+  }
+
+  Future<bool> login(
+      String identifier, String hashedPin, String deviceId) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -86,22 +122,30 @@ class UserProvider extends ChangeNotifier {
 
       final prefs = await SharedPreferences.getInstance();
       final preferredLanguage = prefs.getString('app_language') ?? 'en';
+      final fcmToken = await _ensureFcmToken();
 
       final response = await _apiService.post('/api/auth/login', data: {
         'identifier': identifier,
         'pinHash': hashedPin,
         'deviceId': deviceId,
+        if (fcmToken != null) 'fcmToken': fcmToken,
         'preferredLanguage': preferredLanguage,
       });
 
+      // backend returns { success: true, data: { access_token, refresh_token, user } }
+      final data = response['data'];
       await SecureStorageService.saveTokens(
-        accessToken: response['accessToken'] ?? response['access_token'],
-        refreshToken: response['refreshToken'] ?? response['refresh_token'],
+        accessToken: data['access_token'],
+        refreshToken: data['refresh_token'],
       );
-      await SecureStorageService.saveUserId(response['user']['id']);
+      await SecureStorageService.saveUserId(data['user']['id']);
 
-      _currentUser = User.fromJson(response['user']);
-      final accessToken = response['access_token'] as String?;
+      _currentUser = User.fromJson(data['user']);
+      PushNotificationService.subscribeToLocalizedTopics(
+        province: _currentUser!.province,
+        communityId: _currentUser!.community,
+      );
+      final accessToken = data['access_token'] as String?;
       if (accessToken != null && accessToken.isNotEmpty) {
         try {
           await SocketService.instance.connect(accessToken);
@@ -126,7 +170,7 @@ class UserProvider extends ChangeNotifier {
       if (!AppConfig.kUseMockData) {
         final refreshToken = await SecureStorageService.getRefreshToken();
         await _apiService.post('/api/auth/logout', data: {
-          if (refreshToken != null) 'refreshToken': refreshToken,
+          if (refreshToken != null) 'refresh_token': refreshToken,
         });
       }
     } catch (_) {}
@@ -148,6 +192,8 @@ class UserProvider extends ChangeNotifier {
         'id': userId,
         'phone_number': registrationData['phoneNumber'],
         'full_name': registrationData['fullName'],
+        'title': registrationData['title'],
+        'gender': registrationData['gender'],
         'age': registrationData['age'],
         'race': registrationData['race'],
         'province': registrationData['province'],
@@ -158,7 +204,7 @@ class UserProvider extends ChangeNotifier {
         'updated_at': DateTime.now().millisecondsSinceEpoch,
         'synced': 0,
       };
-      
+
       await LocalDb.insertUser(localUserMap);
       await SecureStorageService.saveUserId(userId);
       _currentUser = _mapLocalToModel(localUserMap);
@@ -166,18 +212,25 @@ class UserProvider extends ChangeNotifier {
       // 2. Attempt backend sync if not in pure mock mode
       if (!AppConfig.kUseMockData) {
         try {
-          final response = await _apiService.post('/api/auth/register', data: registrationData);
+          final response = await _apiService.post('/api/auth/register',
+              data: registrationData);
+          final data = response['data'];
           await SecureStorageService.saveTokens(
-            accessToken: response['accessToken'] ?? response['access_token'],
-            refreshToken: response['refreshToken'] ?? response['refresh_token'],
+            accessToken: data['access_token'],
+            refreshToken: data['refresh_token'],
           );
-          await SecureStorageService.saveUserId(response['user']['id']);
-          _currentUser = User.fromJson(response['user'] as Map<String, dynamic>);
+          await SecureStorageService.saveUserId(data['user']['id']);
+          _currentUser = User.fromJson(data['user'] as Map<String, dynamic>);
+          PushNotificationService.subscribeToLocalizedTopics(
+            province: _currentUser!.province,
+            communityId: _currentUser!.community,
+          );
           await LocalDb.updateUser(userId, {'synced': 1});
         } catch (e) {
           // If network error, we stay registered LOCALLY.
           // The sync will happen later via OfflineQueue.
-          debugPrint('[UserProvider] Registration sync failed, staying offline: $e');
+          debugPrint(
+              '[UserProvider] Registration sync failed, staying offline: $e');
         }
       }
 
@@ -204,6 +257,8 @@ class UserProvider extends ChangeNotifier {
       idNumber: m['id_number'],
       age: m['age'] ?? 0,
       role: m['tier'] ?? 'USER',
+      title: m['title'] as String?,
+      gender: m['gender'] as String?,
       emergencyContacts: [],
       profileImagePath: m['profile_image_path'],
       createdAt: DateTime.fromMillisecondsSinceEpoch(m['created_at']),

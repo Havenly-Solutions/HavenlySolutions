@@ -99,9 +99,9 @@ class SosOrchestrator {
       _fireLayer3Bluetooth(userId: userId, triggeredAt: triggeredAt),
     ]);
 
-    final gpsResult   = results[0] as GpsLayerResult;
-    final cellResult  = results[1] as CellLayerResult;
-    final meshResult  = results[2] as bool;
+    final gpsResult = results[0] as GpsLayerResult;
+    final cellResult = results[1] as CellLayerResult;
+    final meshResult = results[2] as bool;
 
     // ── STEP 3: Dispatch SMS immediately ───────────────────────
     // Runs after GPS so we can include coordinates in the message.
@@ -313,6 +313,6 @@ class SosResult {
 
   @override
   String toString() =>
-    'SosResult(gps: ${layer1Gps.success}, cell: ${layer2Cell.success}, '
-    'mesh: $layer3Mesh, sms: ${smsResult.succeeded}/${smsResult.attempted})';
+      'SosResult(gps: ${layer1Gps.success}, cell: ${layer2Cell.success}, '
+      'mesh: $layer3Mesh, sms: ${smsResult.succeeded}/${smsResult.attempted})';
 }

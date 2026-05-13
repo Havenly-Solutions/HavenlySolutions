@@ -57,7 +57,8 @@ class CaseModel {
       status: map['status'],
       synced: map['synced'] == 1,
       createdAt: DateTime.parse(map['created_at']),
-      evidenceUrls: map['evidence_urls'] != null && map['evidence_urls'].toString().isNotEmpty
+      evidenceUrls: map['evidence_urls'] != null &&
+              map['evidence_urls'].toString().isNotEmpty
           ? map['evidence_urls'].toString().split(',')
           : [],
     );

@@ -49,7 +49,14 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
   ];
 
   final List<String> _languages = [
-    'English', 'Zulu', 'Xhosa', 'Afrikaans', 'Sotho', 'Tswana', 'Venda', 'Tsonga'
+    'English',
+    'Zulu',
+    'Xhosa',
+    'Afrikaans',
+    'Sotho',
+    'Tswana',
+    'Venda',
+    'Tsonga'
   ];
 
   @override
@@ -82,7 +89,8 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
   Future<void> _submitReport() async {
     final caseId = const Uuid().v4();
     final now = DateTime.now();
-    final refNumber = 'HVN-${now.year}-${(now.millisecondsSinceEpoch % 10000).toString().padLeft(4, '0')}';
+    final refNumber =
+        'HVN-${now.year}-${(now.millisecondsSinceEpoch % 10000).toString().padLeft(4, '0')}';
 
     final newCase = CaseModel(
       id: caseId,
@@ -98,15 +106,31 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
     );
 
     final success = await context.read<CaseProvider>().submitCase(newCase);
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Your report has been submitted. SAPS reference: $refNumber'),
-          backgroundColor: const Color(0xFF1A7A4A),
-        ),
-      );
-      Navigator.pop(context);
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Your report has been submitted. SAPS reference: $refNumber'),
+            backgroundColor: const Color(0xFF1A7A4A),
+          ),
+        );
+        Navigator.pop(context);
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _dateController.dispose();
+    _locationController.dispose();
+    _descriptionController.dispose();
+    _nameController.dispose();
+    _idController.dispose();
+    _phoneController.dispose();
+    _emergencyController.dispose();
+    _evidenceDescController.dispose();
+    super.dispose();
   }
 
   @override
@@ -121,9 +145,14 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
         ),
         title: const Text(
           'New Report',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        actions: const [Padding(padding: EdgeInsets.only(right: 16), child: Center(child: SapsBadge()))],
+        actions: const [
+          Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: Center(child: SapsBadge()))
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(
@@ -168,10 +197,14 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
 
   Widget _buildCurrentStep() {
     switch (_currentStep) {
-      case 0: return _buildStep0();
-      case 1: return _buildStep1();
-      case 2: return _buildStep2();
-      default: return const SizedBox();
+      case 0:
+        return _buildStep0();
+      case 1:
+        return _buildStep1();
+      case 2:
+        return _buildStep2();
+      default:
+        return const SizedBox();
     }
   }
 
@@ -179,11 +212,14 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader('What happened?', 'Please share as much or as little as you feel comfortable with. This report is private and confidential.'),
+        _buildHeader('What happened?',
+            'Please share as much or as little as you feel comfortable with. This report is private and confidential.'),
         const SizedBox(height: 20),
         DropdownButtonFormField<String>(
-          value: _incidentType,
-          items: _incidentTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+          initialValue: _incidentType,
+          items: _incidentTypes
+              .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+              .toList(),
           onChanged: (v) => setState(() => _incidentType = v),
           decoration: _inputDecoration('Type of incident'),
         ),
@@ -205,12 +241,15 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
               });
             }
           },
-          decoration: _inputDecoration('When did this happen?', hint: 'Date of the incident'),
+          decoration: _inputDecoration('When did this happen?',
+              hint: 'Date of the incident'),
         ),
         const SizedBox(height: 16),
         TextFormField(
           controller: _locationController,
-          decoration: _inputDecoration('Where did it happen?', hint: 'Street address, area or describe the location', prefix: Icons.location_on),
+          decoration: _inputDecoration('Where did it happen?',
+              hint: 'Street address, area or describe the location',
+              prefix: Icons.location_on),
         ),
         const SizedBox(height: 12),
         _buildMapPlaceholder(),
@@ -219,8 +258,12 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
           controller: _descriptionController,
           maxLines: 5,
           maxLength: 1000,
-          decoration: _inputDecoration('Tell us what happened', hint: 'Describe what happened in your own words. Take your time.'),
-          buildCounter: (context, {required currentLength, required isFocused, maxLength}) => const Text(
+          decoration: _inputDecoration('Tell us what happened',
+              hint:
+                  'Describe what happened in your own words. Take your time.'),
+          buildCounter: (context,
+                  {required currentLength, required isFocused, maxLength}) =>
+              const Text(
             'Everything you write is secure and will only be seen by SAPS officers.',
             style: TextStyle(fontSize: 10, color: Color(0xFF8A9BB0)),
           ),
@@ -228,7 +271,8 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
         const SizedBox(height: 24),
         const TrustBanner(
           icon: Icons.shield,
-          text: 'Your report is encrypted and submitted directly to SAPS. You do not need to visit a police station to open this case.',
+          text:
+              'Your report is encrypted and submitted directly to SAPS. You do not need to visit a police station to open this case.',
         ),
       ],
     );
@@ -238,31 +282,46 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader('Your details', 'This helps SAPS contact you. Your ID number is encrypted and cannot be read by anyone except your assigned officer.'),
+        _buildHeader('Your details',
+            'This helps SAPS contact you. Your ID number is encrypted and cannot be read by anyone except your assigned officer.'),
         const SizedBox(height: 20),
-        TextFormField(controller: _nameController, decoration: _inputDecoration('Full name', hint: 'Your name as per your ID document')),
+        TextFormField(
+            controller: _nameController,
+            decoration: _inputDecoration('Full name',
+                hint: 'Your name as per your ID document')),
         const SizedBox(height: 16),
         TextFormField(
           controller: _idController,
           maxLength: 13,
           keyboardType: TextInputType.number,
-          decoration: _inputDecoration('South African ID number', hint: '13-digit ID number (encrypted)'),
+          decoration: _inputDecoration('South African ID number',
+              hint: '13-digit ID number (encrypted)'),
         ),
         const SizedBox(height: 16),
-        TextFormField(controller: _phoneController, keyboardType: TextInputType.phone, decoration: _inputDecoration('Phone number', hint: '+27 or 0XX XXX XXXX')),
+        TextFormField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            decoration:
+                _inputDecoration('Phone number', hint: '+27 or 0XX XXX XXXX')),
         const SizedBox(height: 16),
-        TextFormField(controller: _emergencyController, decoration: _inputDecoration('Emergency contact (optional)', hint: 'Name and phone number')),
+        TextFormField(
+            controller: _emergencyController,
+            decoration: _inputDecoration('Emergency contact (optional)',
+                hint: 'Name and phone number')),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          value: _language,
-          items: _languages.map((l) => DropdownMenuItem(value: l, child: Text(l))).toList(),
+          initialValue: _language,
+          items: _languages
+              .map((l) => DropdownMenuItem(value: l, child: Text(l)))
+              .toList(),
           onChanged: (v) => setState(() => _language = v),
           decoration: _inputDecoration('Preferred language for updates'),
         ),
         const SizedBox(height: 24),
         const TrustBanner(
           icon: Icons.lock,
-          text: 'Your ID number and contact details are AES-256 encrypted. Only authorised SAPS officers assigned to your case can view them.',
+          text:
+              'Your ID number and contact details are AES-256 encrypted. Only authorised SAPS officers assigned to your case can view them.',
         ),
       ],
     );
@@ -272,19 +331,22 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader('Add evidence (optional)', 'Photos, screenshots, voice notes or documents. This step is optional but helps SAPS act faster on your report.'),
+        _buildHeader('Add evidence (optional)',
+            'Photos, screenshots, voice notes or documents. This step is optional but helps SAPS act faster on your report.'),
         const SizedBox(height: 20),
         TextFormField(
           controller: _evidenceDescController,
           maxLines: 3,
-          decoration: _inputDecoration('Describe what this evidence shows', hint: 'e.g. Photo of bruising taken on the same day.'),
+          decoration: _inputDecoration('Describe what this evidence shows',
+              hint: 'e.g. Photo of bruising taken on the same day.'),
         ),
         const SizedBox(height: 16),
         _buildUploadZone(),
         const SizedBox(height: 24),
         const TrustBanner(
           icon: Icons.shield,
-          text: 'All files are encrypted and stored on SAPS-approved secure servers. They are only accessible by your assigned case officer.',
+          text:
+              'All files are encrypted and stored on SAPS-approved secure servers. They are only accessible by your assigned case officer.',
         ),
       ],
     );
@@ -294,25 +356,40 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A))),
+        Text(title,
+            style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0D1B2A))),
         const SizedBox(height: 8),
-        Text(subtitle, style: const TextStyle(fontSize: 13, color: Color(0xFF4A5568), height: 1.5)),
+        Text(subtitle,
+            style: const TextStyle(
+                fontSize: 13, color: Color(0xFF4A5568), height: 1.5)),
       ],
     );
   }
 
-  InputDecoration _inputDecoration(String label, {String? hint, IconData? prefix}) {
+  InputDecoration _inputDecoration(String label,
+      {String? hint, IconData? prefix}) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      prefixIcon: prefix != null ? Icon(prefix, size: 20, color: const Color(0xFF002366)) : null,
+      prefixIcon: prefix != null
+          ? Icon(prefix, size: 20, color: const Color(0xFF002366))
+          : null,
       filled: true,
       fillColor: Colors.white,
       labelStyle: const TextStyle(color: Color(0xFF4A5568), fontSize: 14),
       hintStyle: const TextStyle(color: Color(0xFF8A9BB0), fontSize: 13),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFDDE3EE))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFDDE3EE))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF002366))),
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFDDE3EE))),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFDDE3EE))),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFF002366))),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
@@ -320,7 +397,10 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
   Widget _buildMapPlaceholder() {
     return Container(
       height: 130,
-      decoration: BoxDecoration(color: const Color(0xFFF0F3F8), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFDDE3EE))),
+      decoration: BoxDecoration(
+          color: const Color(0xFFF0F3F8),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFDDE3EE))),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -329,7 +409,11 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
             children: [
               Icon(Icons.map, color: Color(0xFF8A9BB0), size: 32),
               SizedBox(height: 8),
-              Text('Confirm on map', style: TextStyle(color: Color(0xFF4A5568), fontSize: 12, fontWeight: FontWeight.w600)),
+              Text('Confirm on map',
+                  style: TextStyle(
+                      color: Color(0xFF4A5568),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600)),
             ],
           ),
           Positioned(
@@ -337,8 +421,13 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
             right: 8,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4)),
-              child: const Text('Optional', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF8A9BB0))),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(4)),
+              child: const Text('Optional',
+                  style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF8A9BB0))),
             ),
           ),
         ],
@@ -348,22 +437,34 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
 
   Widget _buildUploadZone() {
     return GestureDetector(
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File upload will be connected to S3 in the next task'))),
+      onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content:
+              Text('File upload will be connected to S3 in the next task'))),
       child: Container(
         height: 160,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFDDE3EE), width: 1, style: BorderStyle.solid), // Dotted appearance would need CustomPaint
+          border: Border.all(
+              color: const Color(0xFFDDE3EE),
+              width: 1,
+              style: BorderStyle
+                  .solid), // Dotted appearance would need CustomPaint
         ),
         child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_upload_outlined, color: Color(0xFF002366), size: 40),
+            Icon(Icons.cloud_upload_outlined,
+                color: Color(0xFF002366), size: 40),
             SizedBox(height: 12),
-            Text('Upload photos, videos or documents', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0D1B2A))),
+            Text('Upload photos, videos or documents',
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0D1B2A))),
             SizedBox(height: 4),
-            Text('JPG, PNG, MP4, PDF — up to 50MB each', style: TextStyle(fontSize: 11, color: Color(0xFF8A9BB0))),
+            Text('JPG, PNG, MP4, PDF — up to 50MB each',
+                style: TextStyle(fontSize: 11, color: Color(0xFF8A9BB0))),
           ],
         ),
       ),
@@ -373,21 +474,26 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
   Widget _buildBottomButtons() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFDDE3EE)))),
+      decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFDDE3EE)))),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (_currentStep == 0) ...[
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton(onPressed: () {}, child: const Text('Save as draft')),
+              child: OutlinedButton(
+                  onPressed: () {}, child: const Text('Save as draft')),
             ),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () => Navigator.pop(context),
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFCC0000)), foregroundColor: const Color(0xFFCC0000)),
+                style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFCC0000)),
+                    foregroundColor: const Color(0xFFCC0000)),
                 child: const Text('Cancel'),
               ),
             ),
@@ -398,7 +504,9 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
             child: ElevatedButton(
               onPressed: _nextStep,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _currentStep == 2 ? const Color(0xFF1A7A4A) : const Color(0xFF002366),
+                backgroundColor: _currentStep == 2
+                    ? const Color(0xFF1A7A4A)
+                    : const Color(0xFF002366),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
@@ -408,7 +516,9 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
                   if (_currentStep == 2) const Icon(Icons.check, size: 18),
                   if (_currentStep == 2) const SizedBox(width: 8),
                   Text(
-                    _currentStep == 2 ? 'Submit Report to SAPS' : 'Continue to Step ${_currentStep + 2} \u2192',
+                    _currentStep == 2
+                        ? 'Submit Report to SAPS'
+                        : 'Continue to Step ${_currentStep + 2} \u2192',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -417,7 +527,10 @@ class _CaseCreateScreenState extends State<CaseCreateScreen> {
           ),
           if (_currentStep > 0) ...[
             const SizedBox(height: 8),
-            TextButton(onPressed: _prevStep, child: const Text('Back to previous step', style: TextStyle(color: Color(0xFF8A9BB0)))),
+            TextButton(
+                onPressed: _prevStep,
+                child: const Text('Back to previous step',
+                    style: TextStyle(color: Color(0xFF8A9BB0)))),
           ]
         ],
       ),

@@ -21,13 +21,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _provinceController;
   late TextEditingController _communityController;
   late TextEditingController _suburbController;
-  
+
   String? _gender;
   String? _race;
   String? _title;
 
-  final List<String> _genders = ['male', 'female', 'non-binary', 'prefer_not_to_say'];
-  final List<String> _races = ['african', 'white', 'coloured', 'indian', 'asian', 'other'];
+  final List<String> _genders = [
+    'male',
+    'female',
+    'non-binary',
+    'prefer_not_to_say'
+  ];
+  final List<String> _races = [
+    'african',
+    'white',
+    'coloured',
+    'indian',
+    'asian',
+    'other'
+  ];
   final List<String> _titles = ['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Adv'];
 
   @override
@@ -39,9 +51,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _emailController = TextEditingController(text: user?.email);
     _provinceController = TextEditingController(text: user?.province);
     _communityController = TextEditingController(text: user?.community);
-    // User model doesn't have suburb explicitly yet, but backend does.
     _suburbController = TextEditingController();
-    
+
     _gender = user?.gender;
     _race = user?.race;
     _title = user?.title;
@@ -77,10 +88,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       };
 
       final response = await ApiService().patch('/api/users/me', data: data);
-      
+
       if (response.data['success']) {
         final userProvider = context.read<UserProvider>();
-        // Update local SQLite and re-boot session
         if (userProvider.currentUser != null) {
           await LocalDb.updateUser(userProvider.currentUser!.id, {
             'full_name': _nameController.text.trim(),
@@ -118,56 +128,101 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
-        title: const Text('Edit Profile', 
-          style: TextStyle(fontFamily: 'Space Grotesk', fontWeight: FontWeight.bold)),
+        title: const Text('Edit Profile',
+            style: TextStyle(
+                fontFamily: 'Space Grotesk', fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: const Color(0xFF1A1A2E),
       ),
-      body: _loading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFF1A1A2E)))
-        : SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionTitle("PERSONAL INFO"),
-                  _buildDropdown("Title", _title, _titles, (v) => setState(() => _title = v)),
-                  _buildTextField(_nameController, "Full Name", Icons.person_outline),
-                  _buildTextField(_ageController, "Age", Icons.calendar_today_outlined, keyboardType: TextInputType.number),
-                  _buildTextField(_emailController, "Email Address", Icons.mail_outline, keyboardType: TextInputType.emailAddress),
-                  
-                  const SizedBox(height: 24),
-                  _buildSectionTitle("DEMOGRAPHICS"),
-                  _buildDropdown("Gender", _gender, _genders, (v) => setState(() => _gender = v)),
-                  _buildDropdown("Race", _race, _races, (v) => setState(() => _race = v)),
-                  
-                  const SizedBox(height: 24),
-                  _buildSectionTitle("LOCATION"),
-                  _buildTextField(_provinceController, "Province", Icons.map_outlined),
-                  _buildTextField(_communityController, "Community", Icons.location_city_outlined),
-                  _buildTextField(_suburbController, "Suburb", Icons.location_on_outlined),
-
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _save,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1A1A2E),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      body: _loading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF1A1A2E)))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle("PERSONAL INFO"),
+                    _buildDropdown("Title", _title, _titles,
+                        (v) => setState(() => _title = v)),
+                    _buildTextField(
+                        _nameController, "Full Name", Icons.person_outline),
+                    _buildTextField(_ageController, "Age",
+                        Icons.calendar_today_outlined,
+                        keyboardType: TextInputType.number),
+                    _buildTextField(_emailController, "Email Address",
+                        Icons.mail_outline,
+                        keyboardType: TextInputType.emailAddress),
+                    const SizedBox(height: 24),
+                    _buildSectionTitle("DEMOGRAPHICS"),
+                    DropdownButtonFormField<String>(
+                      value: _gender,
+                      decoration: InputDecoration(
+                        labelText: 'Gender',
+                        labelStyle: TextStyle(color: Colors.grey.shade500),
+                        filled: true,
+                        fillColor: const Color(0xFF111111),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Color(0xFF222222)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Color(0xFF222222)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Color(0xFFE53935)),
+                        ),
                       ),
-                      child: const Text("Save Changes", 
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      dropdownColor: const Color(0xFF111111),
+                      style: const TextStyle(color: Colors.white),
+                      items: const [
+                        DropdownMenuItem(value: 'male', child: Text('Male')),
+                        DropdownMenuItem(value: 'female', child: Text('Female')),
+                        DropdownMenuItem(value: 'non-binary', child: Text('Non-binary')),
+                        DropdownMenuItem(
+                          value: 'prefer_not_to_say',
+                          child: Text('Prefer not to say'),
+                        ),
+                      ],
+                      onChanged: (v) => setState(() => _gender = v),
                     ),
-                  ),
-                ],
+                    _buildDropdown("Race", _race, _races,
+                        (v) => setState(() => _race = v)),
+                    const SizedBox(height: 24),
+                    _buildSectionTitle("LOCATION"),
+                    _buildTextField(
+                        _provinceController, "Province", Icons.map_outlined),
+                    _buildTextField(_communityController, "Community",
+                        Icons.location_city_outlined),
+                    _buildTextField(_suburbController, "Suburb",
+                        Icons.location_on_outlined),
+                    const SizedBox(height: 40),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1A1A2E),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text("Save Changes",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
     );
   }
 
@@ -187,7 +242,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {TextInputType? keyboardType}) {
+  Widget _buildTextField(TextEditingController controller, String label,
+      IconData icon,
+      {TextInputType? keyboardType}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
@@ -216,12 +273,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildDropdown(String label, String? value, List<String> items, ValueChanged<String?> onChanged) {
+  Widget _buildDropdown(String label, String? value, List<String> items,
+      ValueChanged<String?> onChanged) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: DropdownButtonFormField<String>(
-        value: value,
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        initialValue: value,
+        items: items
+            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+            .toList(),
         onChanged: onChanged,
         style: const TextStyle(fontFamily: 'DM Sans', color: Colors.black),
         decoration: InputDecoration(

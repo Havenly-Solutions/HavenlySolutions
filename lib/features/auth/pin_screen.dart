@@ -49,16 +49,16 @@ class _PinScreenState extends State<PinScreen> {
 
     final userProvider = context.read<UserProvider>();
     final entered = _pin.join();
-    
+
     final prefs = await SharedPreferences.getInstance();
-    final identifier = prefs.getString('user_phone') ?? ''; 
+    final identifier = prefs.getString('user_phone') ?? '';
     final deviceId = await SecureStorageService.getOrCreateDeviceId();
 
     debugPrint('[Auth] Attempting login for $identifier');
 
-    // We'll send the raw PIN for now as the provider/backend comparison 
-    // requires a stable value. BCrypt.hashpw creates a random salt 
-    // and a new hash every time, making it impossible to match 
+    // We'll send the raw PIN for now as the provider/backend comparison
+    // requires a stable value. BCrypt.hashpw creates a random salt
+    // and a new hash every time, making it impossible to match
     // unless compared using checkpw on the server side.
     final success = await userProvider.login(identifier, entered, deviceId);
 
@@ -78,7 +78,9 @@ class _PinScreenState extends State<PinScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _attempts == 2 ? AppTranslations.t('pin_wrong_2') : AppTranslations.t('pin_wrong'),
+            _attempts == 2
+                ? AppTranslations.t('pin_wrong_2')
+                : AppTranslations.t('pin_wrong'),
           ),
           backgroundColor: const Color(0xFFC0392B),
         ),
@@ -158,32 +160,42 @@ class _PinScreenState extends State<PinScreen> {
   Widget build(BuildContext context) {
     context.watch<LanguageProvider>();
 
+    final user = context.watch<UserProvider>().currentUser;
+    final greeting =
+        user?.welcomeDisplayName ?? AppTranslations.t('welcome_back');
+
     return AppBackground(
-      headerTitle: AppTranslations.t('welcome_back'),
-      headerSubtitle: AppTranslations.t('app_name'),
-      cardHeightFactor: 0.7,
+      headerTitle: greeting,
+      headerSubtitle: 'Enter your secure Havenly PIN',
+      cardHeightFactor: 0.72,
       showBackButton: true,
       isCleanMode: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.fromLTRB(32, 24, 32, 28),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               AppTranslations.t('enter_pin'),
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(4, (i) {
                 final filled = _pin[i].isNotEmpty;
                 return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 12),
-                  width: 18,
-                  height: 18,
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
+                  width: 22,
+                  height: 22,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _locked ? Colors.grey.shade200 : filled ? Colors.black : Colors.grey.shade200,
+                    color: _locked
+                        ? Colors.grey.shade300
+                        : filled
+                            ? Colors.black
+                            : Colors.grey.shade300,
                   ),
                 );
               }),
@@ -192,48 +204,61 @@ class _PinScreenState extends State<PinScreen> {
               const SizedBox(height: 24),
               Text(
                 AppTranslations.t('pin_lockout_title'),
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 6),
               Text(
                 '${AppTranslations.t('retry_in')} $_lockCountdown ${AppTranslations.t('seconds')}',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                textAlign: TextAlign.center,
               ),
               if (_sosTriggered) ...[
                 const SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEE2E2),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(18),
                   ),
                   child: Column(
                     children: [
                       Text(
                         AppTranslations.t('pin_sos_warning'),
-                        style: const TextStyle(color: Colors.black, fontSize: 13),
+                        style: const TextStyle(
+                            color: Colors.black87, fontSize: 14),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 12),
                       Text(
                         '$_sosCountdown ${AppTranslations.t('seconds')}',
-                        style: const TextStyle(color: Color(0xFFC0392B), fontSize: 32, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            color: Color(0xFFC0392B),
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold),
                       ),
                       TextButton(
                         onPressed: _cancelSOS,
-                        child: Text(AppTranslations.t('cancel_sos'), style: const TextStyle(color: Color(0xFFC0392B), fontWeight: FontWeight.bold)),
+                        child: Text(AppTranslations.t('cancel_sos'),
+                            style: const TextStyle(
+                                color: Color(0xFFC0392B),
+                                fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
                 ),
               ],
             ],
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
             if (!_locked) ...[
               _Keypad(onDigit: _onDigit, onDelete: _onDelete),
               const SizedBox(height: 24),
               TextButton(
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.forgotPin),
-                child: Text(AppTranslations.t('forgot_pin'), style: TextStyle(color: Colors.grey.shade600)),
+                onPressed: () =>
+                    Navigator.pushNamed(context, AppRoutes.forgotPin),
+                child: Text(AppTranslations.t('forgot_pin'),
+                    style: TextStyle(color: Colors.grey.shade600)),
               ),
             ],
           ],
@@ -268,11 +293,18 @@ class _Keypad extends StatelessWidget {
                 width: 72,
                 height: 72,
                 margin: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(36)),
+                decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(36)),
                 alignment: Alignment.center,
                 child: k == 'del'
-                    ? const Icon(Icons.backspace_outlined, color: Colors.black, size: 22)
-                    : Text(k, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.black)),
+                    ? const Icon(Icons.backspace_outlined,
+                        color: Colors.black, size: 22)
+                    : Text(k,
+                        style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black)),
               ),
             );
           }).toList(),

@@ -25,7 +25,8 @@ class SafetyMetricsCard extends StatelessWidget {
         ),
         child: const SizedBox(
           height: 110,
-          child: Center(child: CircularProgressIndicator(color: Color(0xFF1A1A2E))),
+          child: Center(
+              child: CircularProgressIndicator(color: Color(0xFF1A1A2E))),
         ),
       );
     }
@@ -81,7 +82,9 @@ class SafetyMetricsCard extends StatelessWidget {
             value: data.totalSosCount == 0
                 ? 'Never triggered'
                 : '${data.totalSosCount} time${data.totalSosCount > 1 ? "s" : ""}',
-            subValue: data.lastSosAt != null ? 'Last: ${_formatDate(data.lastSosAt!)}' : null,
+            subValue: data.lastSosAt != null
+                ? 'Last: ${_formatDate(data.lastSosAt!)}'
+                : null,
           ),
           const Divider(height: 20, color: Color(0xFFE0E0E0)),
           _MetricRow(
@@ -98,8 +101,11 @@ class SafetyMetricsCard extends StatelessWidget {
             icon: Icons.folder_outlined,
             iconColor: const Color(0xFF0B6E4F),
             label: 'Cases Filed',
-            value: '${data.totalCasesFiled} filed  ·  ${data.casesResolved} resolved',
-            subValue: data.lastCaseAt != null ? 'Last: ${_formatDate(data.lastCaseAt!)}' : null,
+            value:
+                '${data.totalCasesFiled} filed  ·  ${data.casesResolved} resolved',
+            subValue: data.lastCaseAt != null
+                ? 'Last: ${_formatDate(data.lastCaseAt!)}'
+                : null,
           ),
         ],
       ),

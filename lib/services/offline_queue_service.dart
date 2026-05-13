@@ -41,12 +41,13 @@ class OfflineQueueService {
     final apiService = ApiService();
 
     for (var item in pending) {
+      final int maxRetries = (item['max_retries'] as int?) ?? 3;
       try {
         final String method = item['method'] as String;
         final String endpoint = item['endpoint'] as String;
-        final dynamic payload =
-            item['payload'] != null ? jsonDecode(item['payload'] as String) : null;
-        final int maxRetries = (item['max_retries'] as int?) ?? 3;
+        final dynamic payload = item['payload'] != null
+            ? jsonDecode(item['payload'] as String)
+            : null;
 
         switch (method) {
           case 'POST':

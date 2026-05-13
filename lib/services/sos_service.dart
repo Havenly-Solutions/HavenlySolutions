@@ -7,6 +7,7 @@ import '../core/services/bluetooth_mesh_service.dart';
 import '../core/security/secure_storage_service.dart';
 import '../core/database/local_db.dart';
 import 'api_service.dart';
+import 'geo_location_service.dart';
 
 enum SOSTriggerType {
   manualButton,
@@ -23,32 +24,41 @@ class SOSService {
   factory SOSService() => _instance;
   SOSService._internal();
 
-  Future<void> triggerSOS({required SOSTriggerType triggerType}) async {
+  Future<void> triggerSOS({
+    required SOSTriggerType triggerType,
+    GeoLocationService? geoService,
+  }) async {
     // Step 1: Haptic feedback immediately
     HapticFeedback.heavyImpact();
 
-    // Step 2: Capture GPS (with 5s timeout -> fallback to last known)
-    final position = await _captureGPS();
+    // Step 2: Capture GPS
+    // If geoService is provided and initialized, use its position.
+    // Otherwise fallback to manual capture.
+    Position? position;
+    if (geoService != null && geoService.currentPosition != null) {
+      position = geoService.currentPosition;
+    } else {
+      position = await _captureGPS();
+    }
 
-    // Step 3: Save SOS to local SQLite IMMEDIATELY (offline survivability)
+    // Step 3: Save SOS to local SQLite IMMEDIATELY
     final userId = await SecureStorageService.getUserId() ?? 'unknown';
     final triggeredAt = DateTime.now().millisecondsSinceEpoch;
-    
-    // We use the existing SosOrchestrator for local persistence for now
-    // but we can extend it or replace it.
-    // Let's use the logic from SosOrchestrator.trigger() but adapted.
-    
     final eventId = await _saveSOSLocally(position, triggerType, userId, triggeredAt);
 
     // Step 4: Fire all layers simultaneously
     await Future.wait([
       _fireDirectSMS(position),
       _fireBTMesh(position, userId, triggeredAt),
-      _fireBackendAPI(position, triggerType, eventId),
+      _fireBackendAPI(position, triggerType, eventId, geoService?.currentAddress),
     ], eagerError: false);
 
-    // Step 5: Start GPS heartbeat
-    _startHeartbeat(eventId);
+    // Step 5: Start tracking
+    if (geoService != null) {
+      await geoService.startSosTracking(eventId);
+    } else {
+      _startHeartbeat(eventId);
+    }
   }
 
   Future<Position?> _captureGPS() async {
@@ -65,7 +75,7 @@ class SOSService {
   }
 
   Future<String> _saveSOSLocally(Position? position, SOSTriggerType type, String userId, int triggeredAt) async {
-    final eventId = DateTime.now().millisecondsSinceEpoch.toString(); // Simple ID for now or UUID
+    final eventId = DateTime.now().millisecondsSinceEpoch.toString();
     await LocalDb.insertSosEvent({
       'id': eventId,
       'user_id': userId,
@@ -96,18 +106,17 @@ class SOSService {
     );
   }
 
-  Future<void> _fireBackendAPI(Position? position, SOSTriggerType type, String localId) async {
+  Future<void> _fireBackendAPI(Position? position, SOSTriggerType type, String localId, String? address) async {
     try {
       await _apiService.post('/api/sos/trigger', data: {
         'localId': localId,
         'triggerType': type.toString().split('.').last,
         'lat': position?.latitude,
         'lng': position?.longitude,
+        'address': address,
         'timestamp': DateTime.now().toIso8601String(),
       });
-    } catch (_) {
-      // Offline queue will handle retry if integrated in ApiService
-    }
+    } catch (_) {}
   }
 
   void _startHeartbeat(String sosId) {
@@ -120,20 +129,22 @@ class SOSService {
             'accuracy': accuracy,
             'timestamp': DateTime.now().toIso8601String(),
           });
-        } catch (_) {
-          // Silent failure for heartbeat, next tick will try again
-        }
+        } catch (_) {}
       },
     );
   }
 
-  Future<void> cancelSOS(String sosId) async {
-    LocationService.stopHeartbeat();
+  Future<void> cancelSOS(String sosId, {GeoLocationService? geoService}) async {
+    if (geoService != null) {
+      await geoService.stopSosTracking();
+    } else {
+      LocationService.stopHeartbeat();
+    }
     BluetoothMeshService.stopAll();
     try {
       await _apiService.delete('/api/sos/$sosId');
     } catch (_) {}
-    
+
     await LocalDb.updateSosEvent(sosId, {
       'status': 'resolved',
       'closed_at': DateTime.now().millisecondsSinceEpoch,

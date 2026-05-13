@@ -1,19 +1,3 @@
-/**
- * FILE: lib/services/geo_location_service.dart
- * PURPOSE: GPS capture, reverse geocoding, auto-detect area
- * PHASE: 11 — Geo-Location Engine
- *
- * On app open:
- *   1. Get current GPS coordinates
- *   2. Reverse geocode to suburb, city, province
- *   3. Find nearest police station via backend
- *   4. Cache result in SharedPreferences
- *
- * During SOS:
- *   Continuous updates every 10 seconds
- *   Updates user.last_lat, user.last_lng on backend
- */
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -22,20 +6,43 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 import 'offline_queue_service.dart';
 
+/// FILE: lib/services/geo_location_service.dart
+/// PURPOSE: GPS capture, reverse geocoding, auto-detect area
+/// PHASE: 13 — PostGIS Integration
+///
+/// On app open:
+///   1. Get current GPS coordinates
+///   2. Reverse geocode to suburb, city, province
+///   3. Resolve nearest community via backend (PostGIS)
+///   4. Cache result in SharedPreferences
+///
+/// During SOS:
+///   Continuous updates every 10 seconds
+///   Updates user.last_lat, user.last_lng on backend
+
 class GeoLocationService extends ChangeNotifier {
   Position? _currentPosition;
   String? _currentAddress;
   String? _currentSuburb;
   String? _currentCity;
   String? _currentProvince;
-  String? _nearestPoliceStation;
+  
+  // Phase 13: Community Info
+  String? _nearestCommunityId;
+  String? _nearestCommunityName;
+  bool _isInsideCommunity = false;
+  
   bool _isTracking = false;
   StreamSubscription<Position>? _positionStream;
+  Timer? _resolveThrottle;
 
   Position? get currentPosition => _currentPosition;
   String? get currentAddress => _currentAddress;
   String? get currentSuburb => _currentSuburb;
   String? get currentCity => _currentCity;
+  String? get nearestCommunityName => _nearestCommunityName;
+  String? get nearestCommunityId => _nearestCommunityId;
+  bool get isInsideCommunity => _isInsideCommunity;
   bool get isTracking => _isTracking;
 
   // Called on app open — auto-detect location
@@ -55,7 +62,7 @@ class GeoLocationService extends ChangeNotifier {
 
       _currentPosition = position;
       await _reverseGeocode(position);
-      await _findNearestPoliceStation(position);
+      await _resolveCommunity(position);
       notifyListeners();
 
       // Update user location on backend
@@ -75,12 +82,11 @@ class GeoLocationService extends ChangeNotifier {
       );
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
-        _currentSuburb =
-            place.subLocality ?? place.locality ?? 'Unknown area';
+        _currentSuburb = place.subLocality ?? place.locality ?? 'Unknown area';
         _currentCity = place.locality ?? '';
         _currentProvince = place.administrativeArea ?? '';
         _currentAddress =
-            '${place.street ?? ''}, ${_currentSuburb}, ${_currentCity}';
+            '${place.street ?? ''}, $_currentSuburb, $_currentCity';
 
         // Cache for offline use
         final prefs = await SharedPreferences.getInstance();
@@ -96,10 +102,25 @@ class GeoLocationService extends ChangeNotifier {
     }
   }
 
-  // Find nearest police station
-  Future<void> _findNearestPoliceStation(Position position) async {
-    // Phase 13 wires this to PostGIS backend query
-    _nearestPoliceStation = 'Locating...';
+  // Phase 13: Resolve community using backend PostGIS
+  Future<void> _resolveCommunity(Position position) async {
+    try {
+      final response = await ApiService().post('/api/geo/resolve', data: {
+        'lat': position.latitude,
+        'lng': position.longitude,
+      });
+
+      if (response.data['success']) {
+        final community = response.data['data']['nearestCommunity'];
+        if (community != null) {
+          _nearestCommunityId = community['id'];
+          _nearestCommunityName = community['name'];
+          _isInsideCommunity = response.data['data']['isInside'] ?? false;
+        }
+      }
+    } catch (e) {
+      debugPrint('[Geo] Resolve community error: $e');
+    }
   }
 
   // Update user's last known location on backend
@@ -124,6 +145,12 @@ class GeoLocationService extends ChangeNotifier {
       _currentPosition = position;
       notifyListeners();
 
+      // Throttled community resolve during tracking (every 30s)
+      if (_resolveThrottle == null || !_resolveThrottle!.isActive) {
+        _resolveCommunity(position);
+        _resolveThrottle = Timer(const Duration(seconds: 30), () {});
+      }
+
       // PATCH location heartbeat to backend
       ApiService().patch('/api/sos/$sosId/location', data: {
         'lat': position.latitude,
@@ -142,6 +169,7 @@ class GeoLocationService extends ChangeNotifier {
     await _positionStream?.cancel();
     _positionStream = null;
     _isTracking = false;
+    _resolveThrottle?.cancel();
     notifyListeners();
   }
 
@@ -172,6 +200,7 @@ class GeoLocationService extends ChangeNotifier {
   @override
   void dispose() {
     _positionStream?.cancel();
+    _resolveThrottle?.cancel();
     super.dispose();
   }
 }

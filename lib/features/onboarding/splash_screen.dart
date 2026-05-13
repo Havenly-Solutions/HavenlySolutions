@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/constants/translations.dart';
 import '../../app/routes.dart';
+import '../../core/security/secure_storage_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,7 +18,6 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     // Force English specifically on this screen initialization to be absolutely sure
-    AppTranslations.setLanguage('en');
   }
 
   Future<void> _onSlideComplete() async {
@@ -30,6 +29,10 @@ class _SplashScreenState extends State<SplashScreen> {
     final seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
     final hasAccount = prefs.getBool('has_account') ?? false;
 
+    // Check if user is already authenticated
+    final userId = await SecureStorageService.getUserId();
+    final isAuthenticated = userId != null;
+
     if (!mounted) return;
 
     if (!seenLanguage) {
@@ -38,6 +41,9 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.pushReplacementNamed(context, AppRoutes.auth);
     } else if (!seenOnboarding) {
       Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
+    } else if (isAuthenticated) {
+      // User is already logged in, go directly to home
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
     } else {
       Navigator.pushReplacementNamed(context, AppRoutes.pin);
     }
@@ -58,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> {
             fit: BoxFit.cover,
           ),
           Container(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
           ),
           SafeArea(
             child: Column(
@@ -90,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const Spacer(flex: 3),
-                
+
                 // Slide to begin
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -98,7 +104,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     height: 64,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(32),
                       border: Border.all(color: Colors.white24),
                     ),
@@ -129,7 +135,8 @@ class _SplashScreenState extends State<SplashScreen> {
                             },
                             onHorizontalDragEnd: (details) {
                               if (_slidePosition > slideWidth * 0.7) {
-                                setState(() => _slidePosition = slideWidth - 56);
+                                setState(
+                                    () => _slidePosition = slideWidth - 56);
                                 _onSlideComplete();
                               } else {
                                 setState(() => _slidePosition = 0);

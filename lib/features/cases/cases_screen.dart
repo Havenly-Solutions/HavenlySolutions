@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants/translations.dart';
-import '../../core/providers/language_provider.dart';
-import '../../features/cases/case_provider.dart';
-import '../../core/models/case_model.dart';
-import '../../providers/user_provider.dart';
+import '../../Shared/theme/app_theme.dart';
+import '../../core/widgets/saps_badge.dart';
+import '../../core/widgets/saps_official_banner.dart';
+import './providers/case_provider.dart';
+import './widgets/case_card.dart';
+import './widgets/activity_log_item.dart';
+import './case_create_screen.dart';
+import './evidence_screen.dart';
 
 class CasesScreen extends StatefulWidget {
   const CasesScreen({super.key});
@@ -14,239 +18,233 @@ class CasesScreen extends StatefulWidget {
 }
 
 class _CasesScreenState extends State<CasesScreen> {
-  late final TextEditingController _descriptionController;
-  late final TextEditingController _evidenceController;
-  String _selectedCategory = CaseProvider.categories.first;
-
   @override
   void initState() {
     super.initState();
-    _descriptionController = TextEditingController();
-    _evidenceController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CaseProvider>().loadCases();
+      final caseProvider = context.read<CaseProvider>();
+      caseProvider.loadCases().then((_) {
+        caseProvider.syncPendingCases();
+      });
     });
   }
 
   @override
-  void dispose() {
-    _descriptionController.dispose();
-    _evidenceController.dispose();
-    super.dispose();
-  }
+  Widget build(BuildContext context) {
+    final caseProvider = context.watch<CaseProvider>();
 
-  Future<void> _showNewCaseDialog() async {
-    final provider = context.read<CaseProvider>();
-    final userProvider = context.read<UserProvider>();
-    _selectedCategory = CaseProvider.categories.first;
-    _descriptionController.clear();
-    _evidenceController.clear();
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        title: Row(
+          children: [
+            const SapsBadge(),
+            const SizedBox(width: 12),
+            Expanded(
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppTranslations.t('new_case'),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 20),
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedCategory,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: CaseProvider.categories
-                        .map((category) => DropdownMenuItem(value: category, child: Text(category)))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setModalState(() => _selectedCategory = value);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _descriptionController,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Description',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (_) => setModalState(() {}),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _evidenceController,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Evidence / Notes',
-                      border: OutlineInputBorder(),
+                    'SOUTH AFRICAN POLICE SERVICE',
+                    style: GoogleFonts.dmSans(
+                      color: AppColors.textPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      onPressed: _descriptionController.text.trim().isEmpty
-                          ? null
-                          : () async {
-                              final navigator = Navigator.of(context);
-                              final messenger = ScaffoldMessenger.of(context);
-                              final result = await provider.submitCase(
-                                userId: userProvider.currentUser?.id ?? 'local_user',
-                                community: userProvider.currentUser?.community ?? 'Unknown Community',
-                                category: _selectedCategory,
-                                description: _descriptionController.text.trim(),
-                                evidence: _evidenceController.text.trim(),
-                              );
-                              if (!mounted) return;
-                              if (result) {
-                                navigator.pop();
-                                messenger.showSnackBar(
-                                  SnackBar(content: Text(AppTranslations.t('case_submitted'))),
-                                );
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-                      ),
-                      child: Text(AppTranslations.t('case_submit'), style: const TextStyle(color: Colors.white)),
+                  Text(
+                    'Case Management Portal',
+                    style: GoogleFonts.dmSans(
+                      color: AppColors.textSecondary,
+                      fontSize: 10,
                     ),
                   ),
-                  const SizedBox(height: 8),
                 ],
               ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    context.watch<LanguageProvider>();
-    final provider = context.watch<CaseProvider>();
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          AppTranslations.t('cases_title'),
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         actions: [
-          TextButton(
-            onPressed: _showNewCaseDialog,
-            child: Text(AppTranslations.t('new_case'), style: const TextStyle(color: Colors.black)),
+          IconButton(
+            onPressed: () {},
+            icon: Icon(Icons.search, color: AppColors.textSecondary),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: Icon(Icons.filter_list, color: AppColors.textSecondary),
           ),
         ],
       ),
-      body: provider.loading
-          ? const Center(child: CircularProgressIndicator(color: Colors.black))
-          : provider.cases.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.folder_open_outlined, color: Colors.grey.shade300, size: 64),
-                      const SizedBox(height: 24),
-                      Text(
-                        AppTranslations.t('cases_title'),
-                        style: const TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+            const SapsOfficialBanner(),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeroCard(context),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
+                      child: Text(
+                        'YOUR ACTIVE REPORTS',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF8A9BB0),
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No reports filed yet.',
-                        style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                    ),
+                    if (caseProvider.isLoading)
+                      const Center(
+                          child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: CircularProgressIndicator()))
+                    else if (caseProvider.cases.isEmpty)
+                      _buildEmptyState()
+                    else
+                      ...caseProvider.cases.map((c) => CaseCard(
+                            caseModel: c,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => EvidenceScreen(caseModel: c)),
+                            ),
+                          )),
+                    if (caseProvider.cases.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(16, 32, 16, 16),
+                        child: Text(
+                          'RECENT ACTIVITY',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF8A9BB0),
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                       ),
+                      ...caseProvider.cases.take(5).map((c) => ActivityLogItem(
+                            title:
+                                'Case ${c.status.replaceAll('_', ' ').toUpperCase()}',
+                            description:
+                                'Your report ${c.refNumber} for ${c.incidentType} is currently ${c.status.replaceAll('_', ' ')}.',
+                            timestamp: c.createdAt,
+                            isUrgent: c.status == 'urgent',
+                          )),
                     ],
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                  itemCount: provider.cases.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final caseItem = provider.cases[index];
-                    return _CaseTile(caseItem: caseItem);
-                  },
+                    const SizedBox(height: 100),
+                  ],
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CaseCreateScreen()),
+        ),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text(
+          'Report Incident',
+          style: GoogleFonts.dmSans(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
     );
   }
-}
 
-class _CaseTile extends StatelessWidget {
-  final CaseModel caseItem;
-
-  const _CaseTile({required this.caseItem});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildHeroCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF002366), Color(0xFF1A3A6E)],
+        ),
+        boxShadow: [
+          const BoxShadow(
+            color: Color.fromRGBO(0, 35, 102, 0.18),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(caseItem.category, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: caseItem.status == 'pending' ? Colors.orange.shade100 : Colors.green.shade100,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  caseItem.status.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: caseItem.status == 'pending' ? Colors.orange.shade800 : Colors.green.shade800,
-                  ),
-                ),
-              ),
-            ],
+          const SapsBadge(),
+          const SizedBox(height: 16),
+          Text(
+            'Your safety, officially documented.',
+            style: GoogleFonts.spaceGrotesk(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
+            ),
           ),
-          const SizedBox(height: 14),
-          Text(caseItem.description, style: TextStyle(color: Colors.grey.shade800, height: 1.4)),
-          if (caseItem.evidence.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text('Evidence: ${caseItem.evidence}', style: TextStyle(color: Colors.grey.shade600)),
-          ],
           const SizedBox(height: 12),
           Text(
-            'Filed ${caseItem.createdAt.day}/${caseItem.createdAt.month}/${caseItem.createdAt.year}',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+            'Every report you submit is received directly by SAPS. You are safe and your case matters.',
+            style: GoogleFonts.dmSans(
+              color: Colors.white70,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CaseCreateScreen()),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFD700),
+              foregroundColor: const Color(0xFF002366),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Report an Incident',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      child: Column(
+        children: [
+          Icon(Icons.description_outlined,
+              size: 64, color: AppColors.divider),
+          const SizedBox(height: 16),
+          Text(
+            'No reports yet',
+            style: GoogleFonts.dmSans(
+                color: AppColors.textSecondary, fontWeight: FontWeight.bold),
           ),
         ],
       ),

@@ -151,14 +151,17 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
         elevation: 0,
         title: Text(
           widget.title,
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
       body: Column(
         children: [
           Expanded(
             child: _isJoining
-                ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryRed))
+                ? const Center(
+                    child:
+                        CircularProgressIndicator(color: AppTheme.primaryRed))
                 : _messages.isEmpty
                     ? Center(
                         child: Text(
@@ -169,21 +172,23 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                       )
                     : ListView.builder(
                         controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 16),
                         itemCount: _messages.length,
                         itemBuilder: (context, index) {
                           final msg = _messages[index];
-                          final isMine = msg.senderId == context.read<UserProvider>().currentUser?.id;
+                          final isMine = msg.senderId ==
+                              context.read<UserProvider>().currentUser?.id;
                           return _CommunityBubble(message: msg, isMine: isMine);
                         },
                       ),
           ),
           Container(
-            padding: EdgeInsets.only(
+            padding: const EdgeInsets.only(
               left: 16,
               right: 16,
               top: 12,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+              bottom: 12,
             ),
             decoration: BoxDecoration(
               border: Border(top: BorderSide(color: Colors.grey.shade200)),
@@ -202,7 +207,8 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                         borderRadius: BorderRadius.circular(28),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 14),
                     ),
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),
@@ -214,8 +220,10 @@ class _CommunityChatScreenState extends State<CommunityChatScreen> {
                   child: Container(
                     width: 48,
                     height: 48,
-                    decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
-                    child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    decoration: const BoxDecoration(
+                        color: Colors.black, shape: BoxShape.circle),
+                    child: const Icon(Icons.send_rounded,
+                        color: Colors.white, size: 20),
                   ),
                 ),
               ],
@@ -240,7 +248,8 @@ class _CommunityBubble extends StatelessWidget {
       child: Align(
         alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
         child: Container(
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+          constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.75),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: isMine ? Colors.black : Colors.grey.shade100,
@@ -252,24 +261,33 @@ class _CommunityBubble extends StatelessWidget {
             ),
           ),
           child: Column(
-            crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment:
+                isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               if (!isMine)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Text(
                     message.senderName,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87),
                   ),
                 ),
               Text(
                 message.body,
-                style: TextStyle(color: isMine ? Colors.white : Colors.black87, fontSize: 14, height: 1.4),
+                style: TextStyle(
+                    color: isMine ? Colors.white : Colors.black87,
+                    fontSize: 14,
+                    height: 1.4),
               ),
               const SizedBox(height: 6),
               Text(
                 '${message.createdAt.hour.toString().padLeft(2, '0')}:${message.createdAt.minute.toString().padLeft(2, '0')}',
-                style: TextStyle(color: isMine ? Colors.white70 : Colors.grey.shade600, fontSize: 10),
+                style: TextStyle(
+                    color: isMine ? Colors.white70 : Colors.grey.shade600,
+                    fontSize: 10),
               ),
             ],
           ),

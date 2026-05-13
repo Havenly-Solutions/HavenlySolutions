@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../core/services/sos_orchestrator.dart';
-import '../../core/services/location_service.dart';
 import '../../services/sos_service.dart';
+import '../../services/geo_location_service.dart';
+import '../../Shared/theme/app_theme.dart';
 
 class SosActiveScreen extends StatefulWidget {
   const SosActiveScreen({super.key});
@@ -14,7 +17,6 @@ class SosActiveScreen extends StatefulWidget {
 
 class _SosActiveScreenState extends State<SosActiveScreen>
     with TickerProviderStateMixin {
-
   // ── ANIMATION ───────────────────────────────────────────────
   late AnimationController _pulseController;
   late Animation<double> _pulse;
@@ -25,11 +27,6 @@ class _SosActiveScreenState extends State<SosActiveScreen>
   bool _cancelHolding = false;
 
   // ── STATE ────────────────────────────────────────────────────
-  double? _lat;
-  double? _lng;
-  bool _meshOk    = false;
-  bool _smsOk     = false;
-  int _smsCount   = 0;
   bool _cancelling = false;
   DateTime? _triggeredAt;
 
@@ -50,39 +47,14 @@ class _SosActiveScreenState extends State<SosActiveScreen>
       vsync: this,
       duration: const Duration(seconds: 3),
     )..addListener(() {
-      setState(() => _cancelProgress = _cancelHoldController.value);
-      if (_cancelHoldController.value >= 1.0) {
-        _handleCancel();
-      }
-    });
+        setState(() => _cancelProgress = _cancelHoldController.value);
+        if (_cancelHoldController.value >= 1.0) {
+          _handleCancel();
+        }
+      });
 
-    _loadResult();
-    _startLocationUpdates();
+    _triggeredAt = DateTime.now();
     HapticFeedback.heavyImpact();
-  }
-
-  void _loadResult() {
-    final r = SosOrchestrator.currentResult;
-    if (r == null) {
-      _triggeredAt = DateTime.now();
-      return;
-    }
-    setState(() {
-      _lat     = r.layer1Gps.latitude;
-      _lng     = r.layer1Gps.longitude;
-      _meshOk   = r.layer3Mesh;
-      _smsOk    = r.smsResult.anySucceeded;
-      _smsCount = r.smsResult.succeeded;
-      _triggeredAt = r.triggeredAt;
-    });
-  }
-
-  void _startLocationUpdates() {
-    LocationService.startHeartbeat(
-      onUpdate: (lat, lng, _) {
-        if (mounted) setState(() { _lat = lat; _lng = lng; });
-      },
-    );
   }
 
   @override
@@ -97,9 +69,10 @@ class _SosActiveScreenState extends State<SosActiveScreen>
   Future<bool> _onWillPop() async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => _ConfirmDialog(
+      builder: (_) => const _ConfirmDialog(
         title: 'Accidental Exit?',
-        body: 'Accidentally pressing back will not cancel the SOS. Your safety is active. To stop, use the hold-to-cancel button below.',
+        body:
+            'Accidentally pressing back will not cancel the SOS. Your safety is active. To stop, use the hold-to-cancel button below.',
         confirmLabel: 'Stay Active',
       ),
     );
@@ -110,12 +83,14 @@ class _SosActiveScreenState extends State<SosActiveScreen>
     _cancelHoldController.stop();
     setState(() => _cancelling = true);
 
+    final geoService = context.read<GeoLocationService>();
     final ok = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => _ConfirmDialog(
+      builder: (_) => const _ConfirmDialog(
         title: 'Confirm Cancel',
-        body: 'Are you absolutely sure you want to stop this SOS alert? Emergency services will be stood down.',
+        body:
+            'Are you absolutely sure you want to stop this SOS alert? Emergency services will be stood down.',
         confirmLabel: 'Yes, End SOS',
         confirmRed: true,
       ),
@@ -124,7 +99,7 @@ class _SosActiveScreenState extends State<SosActiveScreen>
     if (ok == true) {
       final eventId = SosOrchestrator.activeEventId;
       if (eventId != null) {
-        await SOSService().cancelSOS(eventId);
+        await SOSService().cancelSOS(eventId, geoService: geoService);
       }
       if (mounted) Navigator.of(context).pop();
     } else {
@@ -139,7 +114,10 @@ class _SosActiveScreenState extends State<SosActiveScreen>
 
   void _onCancelHoldStart() {
     if (_cancelling) return;
-    setState(() { _cancelHolding = true; _cancelProgress = 0; });
+    setState(() {
+      _cancelHolding = true;
+      _cancelProgress = 0;
+    });
     _cancelHoldController.forward(from: 0);
   }
 
@@ -147,7 +125,10 @@ class _SosActiveScreenState extends State<SosActiveScreen>
     if (_cancelProgress < 1.0) {
       _cancelHoldController.stop();
       _cancelHoldController.reset();
-      setState(() { _cancelHolding = false; _cancelProgress = 0; });
+      setState(() {
+        _cancelHolding = false;
+        _cancelProgress = 0;
+      });
     }
   }
 
@@ -155,6 +136,9 @@ class _SosActiveScreenState extends State<SosActiveScreen>
 
   @override
   Widget build(BuildContext context) {
+    final geoService = context.watch<GeoLocationService>();
+    final pos = geoService.currentPosition;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -162,7 +146,7 @@ class _SosActiveScreenState extends State<SosActiveScreen>
         _onWillPop();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFC0392B),
+        backgroundColor: AppColors.danger,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -181,7 +165,7 @@ class _SosActiveScreenState extends State<SosActiveScreen>
                         height: 180,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                         ),
                       ),
                     ),
@@ -196,10 +180,9 @@ class _SosActiveScreenState extends State<SosActiveScreen>
                         child: Text(
                           'SOS',
                           style: TextStyle(
-                            color: Color(0xFFC0392B),
+                            color: AppColors.danger,
                             fontSize: 38,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'Space Grotesk',
                           ),
                         ),
                       ),
@@ -215,17 +198,15 @@ class _SosActiveScreenState extends State<SosActiveScreen>
                     color: Colors.white,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Space Grotesk',
                     letterSpacing: 2,
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Emergency services have been notified',
-                  style: TextStyle(
+                  style: GoogleFonts.dmSans(
                     color: Colors.white,
                     fontSize: 16,
-                    fontFamily: 'DM Sans',
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -236,37 +217,37 @@ class _SosActiveScreenState extends State<SosActiveScreen>
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.15),
+                    color: const Color.fromRGBO(0, 0, 0, 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Column(
                     children: [
                       _MetaRow(
                         label: 'TRIGGERED AT',
-                        value: _triggeredAt?.toLocal().toString().substring(11, 19) ?? '--:--:--',
+                        value: _triggeredAt
+                                ?.toLocal()
+                                .toString()
+                                .substring(11, 19) ??
+                            '--:--:--',
                       ),
                       const Divider(color: Colors.white24),
                       _MetaRow(
                         label: 'LOCATION',
-                        value: _lat != null ? '${_lat!.toStringAsFixed(5)}, ${_lng!.toStringAsFixed(5)}' : 'Acquiring...',
+                        value: geoService.currentAddress ?? 'Acquiring...',
                       ),
+                      if (pos != null)
+                         Padding(
+                           padding: const EdgeInsets.only(top: 4),
+                           child: Text(
+                             '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}',
+                             style: const TextStyle(color: Colors.white70, fontSize: 10),
+                           ),
+                         ),
                     ],
                   ),
                 ),
 
                 const SizedBox(height: 24),
-
-                // Badges
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (_smsOk) _StatusBadge(label: 'SMS: $_smsCount Contacts'),
-                    const SizedBox(width: 8),
-                    if (_meshOk) const _StatusBadge(label: 'Bluetooth Relay Active'),
-                  ],
-                ),
-
-                const Spacer(flex: 2),
 
                 // HOLD TO CANCEL
                 GestureDetector(
@@ -288,18 +269,18 @@ class _SosActiveScreenState extends State<SosActiveScreen>
                               child: LinearProgressIndicator(
                                 value: _cancelProgress,
                                 backgroundColor: Colors.white,
-                                valueColor: const AlwaysStoppedAnimation<Color>(Color(0x33C0392B)),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.danger.withValues(alpha: 0.2)),
                               ),
                             ),
                           ),
                         Center(
                           child: Text(
                             _cancelling ? 'ENDING SOS...' : 'HOLD 3S TO CANCEL',
-                            style: const TextStyle(
-                              color: Color(0xFFC0392B),
+                            style: GoogleFonts.spaceGrotesk(
+                              color: AppColors.danger,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Space Grotesk',
                               letterSpacing: 1.2,
                             ),
                           ),
@@ -329,30 +310,21 @@ class _MetaRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(value,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600)),
+          ),
         ],
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String label;
-  const _StatusBadge({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white30),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
       ),
     );
   }
@@ -374,21 +346,25 @@ class _ConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(title, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-      content: Text(body, style: const TextStyle(color: Colors.black87)),
+      title: Text(title,
+          style: GoogleFonts.dmSans(
+              color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+      content: Text(body, style: GoogleFonts.dmSans(color: AppColors.textPrimary)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Go Back', style: TextStyle(color: Colors.grey)),
+          child: Text('Go Back', style: GoogleFonts.dmSans(color: AppColors.textSecondary)),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
           style: ElevatedButton.styleFrom(
-            backgroundColor: confirmRed ? const Color(0xFFC0392B) : Colors.black,
+            backgroundColor:
+                confirmRed ? AppColors.danger : AppColors.textPrimary,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: Text(confirmLabel),
         ),

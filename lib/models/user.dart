@@ -5,11 +5,34 @@ class User {
   final String? email;
   final String province;
   final String community;
+
+  String get firstName => fullName.trim().split(' ').first;
+  String get surname {
+    final parts = fullName.trim().split(' ');
+    return parts.length > 1 ? parts.last : fullName;
+  }
+
+  String get welcomeDisplayName {
+    final initial = firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
+    final surnamePart = surname.isNotEmpty ? surname : '';
+    final titlePart = title?.trim().isNotEmpty == true ? '$title ' : '';
+    if (titlePart.isEmpty && initial.isEmpty && surnamePart.isEmpty) {
+      return 'Welcome back';
+    }
+    if (surnamePart.isEmpty) {
+      return 'Welcome back $titlePart$initial'.trim();
+    }
+    return 'Welcome back $titlePart${initial.isNotEmpty ? '$initial ' : ''}$surnamePart'
+        .trim();
+  }
+
   final String race;
   final String? idNumber;
   final String? passportNumber;
   final int age;
   final String role;
+  final String? title;
+  final String? gender;
   final List<String> emergencyContacts;
   final double? lastLat;
   final double? lastLng;
@@ -30,6 +53,8 @@ class User {
     this.passportNumber,
     required this.age,
     required this.role,
+    this.title,
+    this.gender,
     required this.emergencyContacts,
     this.lastLat,
     this.lastLng,
@@ -52,6 +77,8 @@ class User {
       passportNumber: json['passportNumber'] as String?,
       age: json['age'] as int,
       role: json['role'] as String,
+      title: json['title'] as String?,
+      gender: json['gender'] as String?,
       emergencyContacts: List<String>.from(json['emergencyContacts'] ?? []),
       lastLat: (json['lastLat'] as num?)?.toDouble(),
       lastLng: (json['lastLng'] as num?)?.toDouble(),
@@ -75,6 +102,8 @@ class User {
       'passportNumber': passportNumber,
       'age': age,
       'role': role,
+      'title': title,
+      'gender': gender,
       'emergencyContacts': emergencyContacts,
       'lastLat': lastLat,
       'last_lng': lastLng,
@@ -97,6 +126,8 @@ class User {
     String? passportNumber,
     int? age,
     String? role,
+    String? title,
+    String? gender,
     List<String>? emergencyContacts,
     double? lastLat,
     double? lastLng,
@@ -117,6 +148,8 @@ class User {
       passportNumber: passportNumber ?? this.passportNumber,
       age: age ?? this.age,
       role: role ?? this.role,
+      title: title ?? this.title,
+      gender: gender ?? this.gender,
       emergencyContacts: emergencyContacts ?? this.emergencyContacts,
       lastLat: lastLat ?? this.lastLat,
       lastLng: lastLng ?? this.lastLng,

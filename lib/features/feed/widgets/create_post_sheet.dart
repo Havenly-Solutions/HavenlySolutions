@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../feed_provider.dart';
+import '../news_provider.dart';
 
 enum _PostType { news, missingPerson }
 
@@ -37,31 +37,42 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
   }
 
   Future<void> _pickImage() async {
-    final provider = context.read<FeedProvider>();
+    final provider = context.read<NewsProvider>();
     final path = await provider.pickMissingPersonImage();
-    if (path != null && mounted) {
-      setState(() => _imagePath = path);
+    if (mounted) {
+      if (path != null) {
+        setState(() => _imagePath = path);
+      }
     }
   }
 
   Future<void> _submit() async {
-    if (_titleController.text.trim().isEmpty) return;
+    if (_titleController.text.trim().isEmpty) {
+      return;
+    }
     if (_postType == _PostType.missingPerson &&
-        _contactPhoneController.text.trim().isEmpty) return;
+        _contactPhoneController.text.trim().isEmpty) {
+      return;
+    }
 
     setState(() => _submitting = true);
+
+    final title = _titleController.text.trim();
+    final body = _bodyController.text.trim();
+    final contactName = _contactNameController.text.trim();
+    final contactPhone = _contactPhoneController.text.trim();
 
     final prefs = await SharedPreferences.getInstance();
     final authorId = prefs.getString('user_id') ?? 'local_user';
     final authorName = prefs.getString('user_name') ?? 'Anonymous';
     final authorRegion = prefs.getString('user_region') ?? 'Unknown';
     final authorAge = prefs.getInt('user_age');
-    final provider = context.read<FeedProvider>();
+    final provider = context.read<NewsProvider>();
 
     if (_postType == _PostType.news) {
       await provider.createNewsPost(
-        title: _titleController.text.trim(),
-        body: _bodyController.text.trim(),
+        title: title,
+        body: body,
         authorId: authorId,
         authorName: authorName,
         authorRegion: authorRegion,
@@ -69,10 +80,10 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
       );
     } else {
       await provider.createMissingPersonPost(
-        title: _titleController.text.trim(),
-        body: _bodyController.text.trim(),
-        contactName: _contactNameController.text.trim(),
-        contactPhone: _contactPhoneController.text.trim(),
+        title: title,
+        body: body,
+        contactName: contactName,
+        contactPhone: contactPhone,
         authorId: authorId,
         authorName: authorName,
         authorRegion: authorRegion,
@@ -81,7 +92,9 @@ class _CreatePostSheetState extends State<CreatePostSheet> {
       );
     }
 
-    if (mounted) Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -272,11 +285,10 @@ class _TypeChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: selected
-              ? const Color(0xFFE53935).withOpacity(0.15)
+              ? const Color(0xFFE53935).withValues(alpha: 0.15)
               : const Color(0xFF111111),
           border: Border.all(
-            color:
-                selected ? const Color(0xFFE53935) : const Color(0xFF222222),
+            color: selected ? const Color(0xFFE53935) : const Color(0xFF222222),
           ),
           borderRadius: BorderRadius.circular(20),
         ),

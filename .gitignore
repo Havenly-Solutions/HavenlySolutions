@@ -44,3 +44,15 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 lib/config/app_config.dart
+
+# Firebase and credential files (must not be checked in)
+google-services.json
+GoogleService-Info.plist
+key.properties
+*.jks
+*.keystore
+*.pem
+*.key
+service-account.json
+firebase-adminsdk.json
+.env

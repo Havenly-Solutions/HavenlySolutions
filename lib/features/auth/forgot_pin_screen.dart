@@ -20,8 +20,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
   void _verify(String method) {
     setState(() {
       _verified = true;
-      _message =
-          'Recovery confirmed by $method. Now create a new 4-digit PIN.';
+      _message = 'Recovery confirmed by $method. Now create a new 4-digit PIN.';
     });
   }
 

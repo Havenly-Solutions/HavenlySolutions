@@ -32,7 +32,9 @@ class CommunityMessageModel {
   factory CommunityMessageModel.fromSocket(dynamic payload) {
     if (payload is Map<String, dynamic>) {
       return CommunityMessageModel(
-        id: payload['id'] as String? ?? payload['messageId'] as String? ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        id: payload['id'] as String? ??
+            payload['messageId'] as String? ??
+            DateTime.now().millisecondsSinceEpoch.toString(),
         channelId: payload['channelId'] as String? ?? '',
         senderId: payload['senderId'] as String? ?? 'unknown',
         senderName: payload['senderName'] as String? ?? 'Unknown',

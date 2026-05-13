@@ -45,7 +45,7 @@ class _DmScreenState extends State<DmScreen> {
     final prefs = await SharedPreferences.getInstance();
     _myId = prefs.getString('current_user_id') ?? 'local_user';
     _myName = prefs.getString('user_name') ?? 'Me';
-    
+
     // Find or create conversation
     final conversations = await LocalDb.getConversations();
     final existing = conversations.firstWhere(
@@ -136,7 +136,8 @@ class _DmScreenState extends State<DmScreen> {
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new,
+              color: Colors.black, size: 20),
         ),
         title: Row(
           children: [
@@ -144,14 +145,22 @@ class _DmScreenState extends State<DmScreen> {
               radius: 18,
               backgroundColor: const Color(0xFFF1F5F9),
               child: Text(
-                widget.participantName.isNotEmpty ? widget.participantName[0].toUpperCase() : '?',
-                style: const TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.bold),
+                widget.participantName.isNotEmpty
+                    ? widget.participantName[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(width: 12),
             Text(
               widget.participantName,
-              style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -160,9 +169,12 @@ class _DmScreenState extends State<DmScreen> {
         children: [
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator(color: Colors.black))
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.black))
                 : _messages.isEmpty
-                    ? Center(child: Text('Start the conversation.', style: TextStyle(color: Colors.grey.shade400)))
+                    ? Center(
+                        child: Text('Start the conversation.',
+                            style: TextStyle(color: Colors.grey.shade400)))
                     : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(20),
@@ -179,11 +191,11 @@ class _DmScreenState extends State<DmScreen> {
                       ),
           ),
           Container(
-            padding: EdgeInsets.only(
+            padding: const EdgeInsets.only(
               left: 20,
               right: 20,
               top: 12,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              bottom: 20,
             ),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -198,8 +210,11 @@ class _DmScreenState extends State<DmScreen> {
                       hintText: 'Message...',
                       filled: true,
                       fillColor: Colors.grey.shade100,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                     ),
                     onSubmitted: (_) => _send(),
                   ),
@@ -210,8 +225,10 @@ class _DmScreenState extends State<DmScreen> {
                   child: Container(
                     width: 48,
                     height: 48,
-                    decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
-                    child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    decoration: const BoxDecoration(
+                        color: Colors.black, shape: BoxShape.circle),
+                    child: const Icon(Icons.send_rounded,
+                        color: Colors.white, size: 20),
                   ),
                 ),
               ],
@@ -228,7 +245,8 @@ class _Bubble extends StatelessWidget {
   final bool isMine;
   final String timeLabel;
 
-  const _Bubble({required this.msg, required this.isMine, required this.timeLabel});
+  const _Bubble(
+      {required this.msg, required this.isMine, required this.timeLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -236,7 +254,8 @@ class _Bubble extends StatelessWidget {
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isMine ? Colors.black : Colors.grey.shade100,
@@ -248,16 +267,22 @@ class _Bubble extends StatelessWidget {
           ),
         ),
         child: Column(
-          crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment:
+              isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             Text(
               msg.body,
-              style: TextStyle(color: isMine ? Colors.white : Colors.black, fontSize: 14, height: 1.4),
+              style: TextStyle(
+                  color: isMine ? Colors.white : Colors.black,
+                  fontSize: 14,
+                  height: 1.4),
             ),
             const SizedBox(height: 4),
             Text(
               timeLabel,
-              style: TextStyle(color: isMine ? Colors.white70 : Colors.grey.shade500, fontSize: 10),
+              style: TextStyle(
+                  color: isMine ? Colors.white70 : Colors.grey.shade500,
+                  fontSize: 10),
             ),
           ],
         ),

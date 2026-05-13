@@ -4,8 +4,8 @@ import '../../core/database/local_db.dart';
 
 class ChatProvider extends ChangeNotifier {
   List<Contact> _contacts = [];
-  List<Map<String, dynamic>> _matchedUsers = [];
-  List<Contact> _unmatchedContacts = [];
+  final List<Map<String, dynamic>> _matchedUsers = [];
+  final List<Contact> _unmatchedContacts = [];
   bool _loading = false;
 
   List<Map<String, dynamic>> get matchedUsers => _matchedUsers;
@@ -19,7 +19,7 @@ class ChatProvider extends ChangeNotifier {
     try {
       if (await FlutterContacts.requestPermission()) {
         _contacts = await FlutterContacts.getContacts(withProperties: true);
-        
+
         _matchedUsers.clear();
         _unmatchedContacts.clear();
 

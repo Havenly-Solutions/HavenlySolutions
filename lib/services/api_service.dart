@@ -7,8 +7,15 @@ import 'offline_queue_service.dart';
 class ApiService {
   final Dio _dio;
   static final ApiService _instance = ApiService._internal();
+  String? _currentUserId;
 
   factory ApiService() => _instance;
+
+  String? get currentUserId => _currentUserId;
+
+  void setCurrentUserId(String? id) {
+    _currentUserId = id;
+  }
 
   ApiService._internal()
       : _dio = Dio(BaseOptions(
@@ -31,7 +38,6 @@ class ApiService {
       onError: (error, handler) async {
         if (error.type == DioExceptionType.connectionError ||
             error.type == DioExceptionType.connectionTimeout) {
-          
           final path = error.requestOptions.path;
           final method = error.requestOptions.method;
           final data = error.requestOptions.data;
@@ -40,7 +46,7 @@ class ApiService {
           if (method != 'GET' && path != '/api/sos/trigger') {
             await OfflineQueueService().enqueue(path, method, data);
           }
-          
+
           final apiException = ApiException.network();
           return handler.next(DioException(
             requestOptions: error.requestOptions,
@@ -52,18 +58,17 @@ class ApiService {
         if (error.response?.statusCode == 401 &&
             error.requestOptions.path != '/api/auth/refresh' &&
             error.requestOptions.path != '/api/auth/login') {
-          
           final refreshToken = await SecureStorageService.getRefreshToken();
           if (refreshToken != null) {
             try {
               final response = await _dio.post('/api/auth/refresh', data: {
-                'refreshToken': refreshToken,
+                'refresh_token':
+                    refreshToken, // Fixed key to match backend (refresh_token)
               });
 
-              final newToken =
-                  response.data['accessToken'] ?? response.data['access_token'];
-              final newRefreshToken =
-                  response.data['refreshToken'] ?? response.data['refresh_token'];
+              final data = response.data['data'];
+              final newToken = data['access_token'];
+              final newRefreshToken = data['refresh_token'];
 
               await SecureStorageService.saveTokens(
                 accessToken: newToken,
@@ -75,13 +80,20 @@ class ApiService {
               options.headers['Authorization'] = 'Bearer $newToken';
               final retryResponse = await _dio.fetch(options);
               return handler.resolve(retryResponse);
+            } on DioException catch (e) {
+              // Only clear tokens if the refresh token is explicitly invalid/expired
+              if (e.response?.statusCode == 401 ||
+                  e.response?.statusCode == 403) {
+                await SecureStorageService.clearTokens();
+              }
+              return handler.next(error);
             } catch (e) {
-              await SecureStorageService.clearTokens();
+              // For other unexpected errors, don't clear tokens, just fail the request
               return handler.next(error);
             }
           }
         }
-        
+
         final apiException = _handleError(error);
         return handler.next(DioException(
           requestOptions: error.requestOptions,
@@ -104,9 +116,10 @@ class ApiService {
     }
     if (error.response != null) {
       final statusCode = error.response!.statusCode ?? 500;
-      final message = error.response!.data?['message'] ?? 'An unknown error occurred';
+      final message =
+          error.response!.data?['message'] ?? 'An unknown error occurred';
       final errorCode = error.response!.data?['errorCode'];
-      
+
       if (statusCode == 401) {
         return ApiException.unauthorized();
       }
@@ -119,7 +132,8 @@ class ApiService {
     return ApiException.serverError(error.message ?? 'Unknown error');
   }
 
-  Future<dynamic> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  Future<dynamic> get(String path,
+      {Map<String, dynamic>? queryParameters}) async {
     try {
       final response = await _dio.get(path, queryParameters: queryParameters);
       return response.data;

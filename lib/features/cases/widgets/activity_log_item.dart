@@ -29,7 +29,9 @@ class ActivityLogItem extends StatelessWidget {
               height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isUrgent ? const Color(0xFFCC0000) : const Color(0xFF002366),
+                color: isUrgent
+                    ? const Color(0xFFCC0000)
+                    : const Color(0xFF002366),
               ),
             ),
           ),

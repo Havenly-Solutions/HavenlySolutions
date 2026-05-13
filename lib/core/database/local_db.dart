@@ -1,18 +1,11 @@
 /*
  * ─────────────────────────────────────────────────────────────
  * FILE: lib/core/database/local_db.dart
- * PHASE: 7 — Local SQLite Database
+ * PHASE: 15 — Local SQLite Database
  *
  * PURPOSE:
  *   Primary offline data store. All app data lives here first.
  *   Synced to PostgreSQL backend when connectivity is available.
- *
- * SCHEMA VERSION HISTORY:
- *   v1: Initial posts, replies, conversations, messages
- *   v2: Added community_alerts
- *   v3: Added sos_events
- *   v4: Added users, communities, emergency_contacts
- *       Proper Phase 7 structure with race, community, encryption
  * ─────────────────────────────────────────────────────────────
  */
 
@@ -34,14 +27,14 @@ class LocalDb {
     final path = join(dir.path, 'havenly_solutions.db');
     return openDatabase(
       path,
-      version: 7,
+      version: 11,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
 
   static Future<void> _onCreate(Database db, int version) async {
-    // ── USERS (Phase 7 Core) ────────────────────────────────────
+    // ── USERS ──────────────────────────────────────────────────
     await db.execute('''
       CREATE TABLE users (
         id TEXT PRIMARY KEY,
@@ -51,6 +44,7 @@ class LocalDb {
         display_name TEXT,
         age INTEGER,
         gender TEXT,
+        title TEXT,
         race TEXT,
         id_number TEXT,
         passport_number TEXT,
@@ -72,7 +66,7 @@ class LocalDb {
       )
     ''');
 
-    // ── COMMUNITIES (Phase 7 Community Zones) ───────────────────
+    // ── COMMUNITIES ─────────────────────────────────────────────
     await db.execute('''
       CREATE TABLE communities (
         id TEXT PRIMARY KEY,
@@ -86,7 +80,7 @@ class LocalDb {
       )
     ''');
 
-    // ── EMERGENCY CONTACTS (Phase 7 SMS Layer) ──────────────────
+    // ── EMERGENCY CONTACTS ──────────────────────────────────────
     await db.execute('''
       CREATE TABLE emergency_contacts (
         id TEXT PRIMARY KEY,
@@ -99,7 +93,7 @@ class LocalDb {
       )
     ''');
 
-    // ── SOS EVENTS (Phase 7 Core) ───────────────────────────────
+    // ── SOS EVENTS ──────────────────────────────────────────────
     await db.execute('''
       CREATE TABLE sos_events (
         id TEXT PRIMARY KEY,
@@ -214,16 +208,17 @@ class LocalDb {
     await db.execute('''
       CREATE TABLE cases (
         id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        community TEXT NOT NULL,
-        category TEXT NOT NULL,
+        ref_number TEXT UNIQUE,
+        incident_type TEXT NOT NULL,
+        incident_date TEXT NOT NULL,
+        location_address TEXT NOT NULL,
+        location_lat REAL,
+        location_lng REAL,
         description TEXT NOT NULL,
-        evidence TEXT,
-        status TEXT NOT NULL DEFAULT 'pending',
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'received',
         synced INTEGER DEFAULT 0,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        created_at TEXT NOT NULL,
+        evidence_urls TEXT
       )
     ''');
 
@@ -251,6 +246,15 @@ class LocalDb {
         updated_at INTEGER NOT NULL
       )
     ''');
+
+    // ── BOOKMARKS (Phase 15 Local Pinning) ─────────────────────
+    await db.execute('''
+      CREATE TABLE bookmarks (
+        id TEXT PRIMARY KEY,
+        post_json TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
   }
 
   static Future<void> _onUpgrade(
@@ -258,11 +262,7 @@ class LocalDb {
     int oldVersion,
     int newVersion,
   ) async {
-    if (oldVersion < 4 && newVersion >= 4) {
-      // ... existing v4 migration ...
-    }
-
-    if (oldVersion < 5 && newVersion >= 5) {
+    if (oldVersion < 5) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS offline_queue (
           id TEXT PRIMARY KEY,
@@ -277,7 +277,7 @@ class LocalDb {
       ''');
     }
 
-    if (oldVersion < 6 && newVersion >= 6) {
+    if (oldVersion < 6) {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS cases (
           id TEXT PRIMARY KEY,
@@ -295,12 +295,8 @@ class LocalDb {
       ''');
     }
 
-    if (oldVersion < 7 && newVersion >= 7) {
-      await db.execute('''
-        ALTER TABLE offline_queue
-        ADD COLUMN max_retries INTEGER DEFAULT 3
-      ''').catchError((_) async {});
-
+    if (oldVersion < 7) {
+      await db.execute('ALTER TABLE offline_queue ADD COLUMN max_retries INTEGER DEFAULT 3').catchError((_) {});
       await db.execute('''
         CREATE TABLE IF NOT EXISTS safety_metrics_cache (
           user_id TEXT PRIMARY KEY,
@@ -308,6 +304,16 @@ class LocalDb {
           updated_at INTEGER NOT NULL
         )
       ''');
+    }
+
+    if (oldVersion < 11) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS bookmarks (
+          id TEXT PRIMARY KEY,
+          post_json TEXT NOT NULL,
+          created_at INTEGER NOT NULL
+        )
+      ''').catchError((_) {});
     }
   }
 
@@ -333,42 +339,6 @@ class LocalDb {
         'radius_km': 5.0,
         'created_at': DateTime.now().millisecondsSinceEpoch,
       },
-      {
-        'id': 'western_cape_cape_town_khayelitsha',
-        'name': 'Khayelitsha',
-        'province': 'Western Cape',
-        'center_lat': -34.3576,
-        'center_lng': 18.6298,
-        'radius_km': 4.0,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      {
-        'id': 'western_cape_cape_town_mitchells_plain',
-        'name': 'Mitchells Plain',
-        'province': 'Western Cape',
-        'center_lat': -34.1500,
-        'center_lng': 18.5800,
-        'radius_km': 3.5,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      {
-        'id': 'kwa_zulu_natal_durban_kwa_mashu',
-        'name': 'KwaMashu',
-        'province': 'KwaZulu-Natal',
-        'center_lat': -29.8294,
-        'center_lng': 30.9994,
-        'radius_km': 3.0,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      {
-        'id': 'limpopo_polokwane_pietersburg',
-        'name': 'Pietersburg',
-        'province': 'Limpopo',
-        'center_lat': -23.9102,
-        'center_lng': 29.4167,
-        'radius_km': 2.0,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      },
     ];
 
     for (final community in communities) {
@@ -380,11 +350,10 @@ class LocalDb {
     }
   }
 
-  // ── RESET FOR FRESH START ───────────────────────────────────
+  // ── RESET ───────────────────────────────────────────────────
 
   static Future<void> reset() async {
     final database = await db;
-    // Delete all records (keep schema).
     await database.delete('users');
     await database.delete('emergency_contacts');
     await database.delete('sos_events');
@@ -394,6 +363,7 @@ class LocalDb {
     await database.delete('messages');
     await database.delete('cases');
     await database.delete('community_alerts');
+    await database.delete('bookmarks');
   }
 
   static Future<void> resetForFreshUser() async {
@@ -401,6 +371,7 @@ class LocalDb {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('has_account');
     await prefs.remove('user_pin');
+    await prefs.remove('user_phone');
     await prefs.remove('current_user_id');
     await prefs.remove('seen_onboarding');
     await prefs.remove('seen_language');
@@ -421,11 +392,7 @@ class LocalDb {
 
   static Future<Map<String, dynamic>?> getUserByPhone(String phone) async {
     final database = await db;
-    final result = await database.query(
-      'users',
-      where: 'phone_number = ?',
-      whereArgs: [phone],
-    );
+    final result = await database.query('users', where: 'phone_number = ?', whereArgs: [phone]);
     return result.isNotEmpty ? result.first : null;
   }
 
@@ -443,119 +410,42 @@ class LocalDb {
 
   static Future<void> insertEmergencyContact(Map<String, dynamic> contact) async {
     final database = await db;
-    await database.insert(
-      'emergency_contacts',
-      contact,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await database.insert('emergency_contacts', contact, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   static Future<List<Map<String, dynamic>>> getEmergencyContacts(String userId) async {
     final database = await db;
-    return database.query(
-      'emergency_contacts',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-    );
+    return database.query('emergency_contacts', where: 'user_id = ?', whereArgs: [userId]);
   }
 
   static Future<void> deleteEmergencyContact(String contactId) async {
     final database = await db;
-    await database.delete(
-      'emergency_contacts',
-      where: 'id = ?',
-      whereArgs: [contactId],
-    );
+    await database.delete('emergency_contacts', where: 'id = ?', whereArgs: [contactId]);
   }
 
   // ── SOS EVENTS ──────────────────────────────────────────────
 
   static Future<void> insertSosEvent(Map<String, dynamic> event) async {
     final database = await db;
-    await database.insert(
-      'sos_events',
-      event,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await database.insert('sos_events', event, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   static Future<void> updateSosEvent(String eventId, Map<String, dynamic> updates) async {
     final database = await db;
-    await database.update(
-      'sos_events',
-      updates,
-      where: 'id = ?',
-      whereArgs: [eventId],
-    );
+    await database.update('sos_events', updates, where: 'id = ?', whereArgs: [eventId]);
   }
 
   static Future<Map<String, dynamic>?> getSosEvent(String eventId) async {
     final database = await db;
-    final result = await database.query(
-      'sos_events',
-      where: 'id = ?',
-      whereArgs: [eventId],
-    );
+    final result = await database.query('sos_events', where: 'id = ?', whereArgs: [eventId]);
     return result.isNotEmpty ? result.first : null;
   }
 
-  static Future<List<Map<String, dynamic>>> getUnsyncedSosEvents() async {
-    final database = await db;
-    return database.query(
-      'sos_events',
-      where: 'synced = 0',
-      orderBy: 'triggered_at DESC',
-    );
-  }
-
-  static Future<void> markSosSynced(String id) async {
-    final database = await db;
-    await database.update(
-      'sos_events',
-      {'synced': 1},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  // ── COMMUNITIES ─────────────────────────────────────────────
-
-  static Future<List<Map<String, dynamic>>> getAllCommunities() async {
-    final database = await db;
-    return database.query('communities', orderBy: 'name');
-  }
-
-  static Future<Map<String, dynamic>?> getCommunity(String communityId) async {
-    final database = await db;
-    final result = await database.query(
-      'communities',
-      where: 'id = ?',
-      whereArgs: [communityId],
-    );
-    return result.isNotEmpty ? result.first : null;
-  }
-
-  static Future<List<Map<String, dynamic>>> getCommunitiesByProvince(
-    String province,
-  ) async {
-    final database = await db;
-    return database.query(
-      'communities',
-      where: 'province = ?',
-      whereArgs: [province],
-      orderBy: 'name',
-    );
-  }
-
-  // ── POSTS ──────────────────────────────────────
+  // ── POSTS ───────────────────────────────────────────────────
 
   static Future<void> insertPost(Map<String, dynamic> post) async {
     final database = await db;
-    await database.insert(
-      'posts',
-      post,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await database.insert('posts', post, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   static Future<List<Map<String, dynamic>>> getPosts() async {
@@ -568,162 +458,120 @@ class LocalDb {
     await database.delete('posts', where: 'id = ?', whereArgs: [id]);
   }
 
-  static Future<void> incrementReplyCount(String postId) async {
-    final database = await db;
-    await database.rawUpdate(
-      'UPDATE posts SET reply_count = reply_count + 1 WHERE id = ?',
-      [postId],
-    );
-  }
+  // ── BOOKMARKS ───────────────────────────────────────────────
 
-  // ── REPLIES ─────────────────────────────────────
-
-  static Future<void> insertReply(Map<String, dynamic> reply) async {
+  static Future<void> insertBookmark(String id, String json) async {
     final database = await db;
     await database.insert(
-      'replies',
-      reply,
+      'bookmarks',
+      {
+        'id': id,
+        'post_json': json,
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+      },
       conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    await incrementReplyCount(reply['post_id'] as String);
-  }
-
-  static Future<List<Map<String, dynamic>>> getReplies(String postId) async {
-    final database = await db;
-    return database.query(
-      'replies',
-      where: 'post_id = ?',
-      whereArgs: [postId],
-      orderBy: 'created_at ASC',
     );
   }
 
-  // ── CONVERSATIONS ───────────────────────────────
-
-  static Future<void> upsertConversation(
-      Map<String, dynamic> conversation) async {
+  static Future<void> deleteBookmark(String id) async {
     final database = await db;
-    await database.insert(
-      'conversations',
-      conversation,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await database.delete('bookmarks', where: 'id = ?', whereArgs: [id]);
+  }
+
+  static Future<List<Map<String, dynamic>>> getBookmarks() async {
+    final database = await db;
+    return database.query('bookmarks', orderBy: 'created_at DESC');
+  }
+
+  static Future<bool> isBookmarked(String id) async {
+    final database = await db;
+    final res = await database.query('bookmarks', where: 'id = ?', whereArgs: [id]);
+    return res.isNotEmpty;
+  }
+
+  // ── CONVERSATIONS & MESSAGES ────────────────────────────────
+
+  static Future<void> upsertConversation(Map<String, dynamic> conversation) async {
+    final database = await db;
+    await database.insert('conversations', conversation, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   static Future<List<Map<String, dynamic>>> getConversations() async {
     final database = await db;
-    return database.query(
-      'conversations',
-      orderBy: 'last_message_at DESC',
-    );
+    return database.query('conversations', orderBy: 'last_message_at DESC');
   }
-
-  // ── MESSAGES ────────────────────────────────────
 
   static Future<void> insertMessage(Map<String, dynamic> message) async {
     final database = await db;
-    await database.insert(
-      'messages',
-      message,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await database.insert('messages', message, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  static Future<List<Map<String, dynamic>>> getMessages(
-      String conversationId) async {
+  static Future<List<Map<String, dynamic>>> getMessages(String conversationId) async {
     final database = await db;
-    return database.query(
-      'messages',
-      where: 'conversation_id = ?',
-      whereArgs: [conversationId],
-      orderBy: 'created_at ASC',
-    );
+    return database.query('messages', where: 'conversation_id = ?', whereArgs: [conversationId], orderBy: 'created_at ASC');
   }
 
   // ── CASES ───────────────────────────────────────────────────
 
   static Future<void> insertCase(Map<String, dynamic> caseData) async {
     final database = await db;
-    await database.insert(
-      'cases',
-      caseData,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await database.insert('cases', caseData, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   static Future<List<Map<String, dynamic>>> getCases() async {
     final database = await db;
-    return database.query('cases', orderBy: 'updated_at DESC');
-  }
-
-  static Future<Map<String, dynamic>?> getCase(String caseId) async {
-    final database = await db;
-    final result = await database.query(
-      'cases',
-      where: 'id = ?',
-      whereArgs: [caseId],
-    );
-    return result.isNotEmpty ? result.first : null;
+    return database.query('cases', orderBy: 'created_at DESC');
   }
 
   static Future<void> updateCase(String caseId, Map<String, dynamic> updates) async {
     final database = await db;
-    await database.update(
-      'cases',
-      {...updates, 'updated_at': DateTime.now().millisecondsSinceEpoch},
-      where: 'id = ?',
-      whereArgs: [caseId],
-    );
+    await database.update('cases', updates, where: 'id = ?', whereArgs: [caseId]);
   }
 
-  static Future<List<Map<String, dynamic>>> getUnsyncedCases() async {
-    final database = await db;
-    return database.query(
-      'cases',
-      where: 'synced = 0',
-      orderBy: 'created_at DESC',
-    );
-  }
-
-  // ── LEGACY SOS METHODS (Backward Compatibility) ────────────
-
-  static Future<void> cancelSosEvent(String id) async {
-    final database = await db;
-    await database.update(
-      'sos_events',
-      {'status': 'cancelled'},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  static Future<List<Map<String, dynamic>>> getSosHistory() async {
-    final database = await db;
-    return database.query('sos_events', orderBy: 'triggered_at DESC');
-  }
+  // ── METRICS ─────────────────────────────────────────────────
 
   static Future<void> saveSafetyMetrics(String userId, String payload) async {
     final database = await db;
     await database.insert(
       'safety_metrics_cache',
-      {
-        'user_id': userId,
-        'payload': payload,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
+      {'user_id': userId, 'payload': payload, 'updated_at': DateTime.now().millisecondsSinceEpoch},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
   static Future<String?> getSafetyMetrics(String userId) async {
     final database = await db;
-    final result = await database.query(
-      'safety_metrics_cache',
-      columns: ['payload'],
-      where: 'user_id = ?',
-      whereArgs: [userId],
-      limit: 1,
-    );
+    final result = await database.query('safety_metrics_cache', where: 'user_id = ?', whereArgs: [userId]);
     return result.isNotEmpty ? result.first['payload'] as String : null;
+  }
+
+  // ── COMMUNITIES ─────────────────────────────────────────────
+
+  static Future<List<Map<String, dynamic>>> getAllCommunities() async {
+    final database = await db;
+    return database.query('communities', orderBy: 'name');
+  }
+
+  // ── REPLIES ─────────────────────────────────────────────────
+
+  static Future<void> insertReply(Map<String, dynamic> reply) async {
+    final database = await db;
+    await database.insert('replies', reply, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  static Future<List<Map<String, dynamic>>> getReplies(String postId) async {
+    final database = await db;
+    return database.query('replies', where: 'post_id = ?', whereArgs: [postId], orderBy: 'created_at ASC');
+  }
+
+  // ── HELPERS ─────────────────────────────────────────────────
+
+  Future<void> wipeDatabase() async {
+    final database = await LocalDb.db;
+    final tables = await database.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata'");
+    for (final table in tables) {
+      await database.delete(table['name'] as String);
+    }
+    await _seedCommunities(database);
   }
 }
