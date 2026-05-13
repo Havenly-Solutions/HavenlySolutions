@@ -31,7 +31,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 
 class CellTowerService {
-  static const _channel = MethodChannel('com.theblacksheep.havenly_solutions/cell_tower');
+  static const _channel =
+      MethodChannel('com.theblacksheep.havenly_solutions/cell_tower');
 
   /// Read current cell tower registration data.
   /// Returns null on iOS or if permission is denied.
@@ -51,10 +52,10 @@ class CellTowerService {
 }
 
 class CellTowerData {
-  final String? mcc;   // Mobile Country Code — 655 for South Africa
-  final String? mnc;   // Mobile Network Code — identifies operator
-  final String? lac;   // Location Area Code
-  final String? cid;   // Cell ID
+  final String? mcc; // Mobile Country Code — 655 for South Africa
+  final String? mnc; // Mobile Network Code — identifies operator
+  final String? lac; // Location Area Code
+  final String? cid; // Cell ID
   final int? signalStrength;
   final String? operator;
 
@@ -79,13 +80,13 @@ class CellTowerData {
   }
 
   Map<String, dynamic> toMap() => {
-    'mcc': mcc,
-    'mnc': mnc,
-    'lac': lac,
-    'cid': cid,
-    'signal_strength': signalStrength,
-    'operator': operator,
-  };
+        'mcc': mcc,
+        'mnc': mnc,
+        'lac': lac,
+        'cid': cid,
+        'signal_strength': signalStrength,
+        'operator': operator,
+      };
 
   bool get hasData => mcc != null && lac != null && cid != null;
 }

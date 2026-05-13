@@ -2,11 +2,14 @@ package com.theblacksheep.havenly
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
 import android.telephony.TelephonyManager
 import android.telephony.CellInfoGsm
 import android.telephony.CellInfoLte
 import android.telephony.CellInfoWcdma
 import androidx.core.content.ContextCompat
+
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -23,6 +26,10 @@ import io.flutter.plugin.common.MethodChannel
  */
 class MainActivity : FlutterActivity() {
   private val CHANNEL = "com.theblacksheep.havenly_solutions/cell_tower"
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+  }
 
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)

@@ -1,64 +1,88 @@
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
+import 'app_typography.dart';
 
 class AppTheme {
-  static const Color sapsNavyBlue    = Color(0xFF002366);
-  static const Color sapsGold        = Color(0xFFFFD700);
-  static const Color sapsDarkBlue    = Color(0xFF001A4D);
-  static const Color sapsRed         = Color(0xFFCC0000);
-  static const Color surfaceWhite    = Color(0xFFFFFFFF);
-  static const Color surfaceGrey     = Color(0xFFF4F6FA);
-  static const Color surfaceCard     = Color(0xFFF0F3F8);
-  static const Color textPrimary     = Color(0xFF0D1B2A);
-  static const Color textSecondary   = Color(0xFF4A5568);
-  static const Color textMuted       = Color(0xFF8A9BB0);
-  static const Color borderColor     = Color(0xFFDDE3EE);
-  static const Color successGreen    = Color(0xFF1A7A4A);
-  static const Color warningAmber    = Color(0xFFD97706);
-
-  static ThemeData get lightTheme {
+  static ThemeData get light {
     return ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: surfaceGrey,
-      primaryColor: sapsNavyBlue,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: sapsNavyBlue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: sapsNavyBlue,
-        foregroundColor: Colors.white,
-      ),
       colorScheme: ColorScheme.fromSeed(
-        seedColor: sapsNavyBlue,
-        primary: sapsNavyBlue,
-        secondary: sapsGold,
-        surface: surfaceWhite,
-        error: sapsRed,
+        seedColor: AppColors.primaryOrange,
+        primary: AppColors.primaryOrange,
+        secondary: AppColors.primaryOrangeLight,
+        error: AppColors.red,
+        surface: AppColors.surface,
+        background: AppColors.background,
       ),
-    );
-  }
-
-  static ThemeData get darkTheme {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: const Color(0xFFF4F6FA),
-      primaryColor: const Color(0xFF002366),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF002366),
-        foregroundColor: Colors.white,
+      scaffoldBackgroundColor: AppColors.background,
+      textTheme: TextTheme(
+        displayLarge: AppTypography.display,
+        headlineLarge: AppTypography.heading1,
+        headlineMedium: AppTypography.heading2,
+        bodyLarge: AppTypography.bodyLarge,
+        bodyMedium: AppTypography.bodySmall,
+        labelLarge: AppTypography.label,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primaryOrange,
+          foregroundColor: Colors.white,
+          textStyle:
+              AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 0,
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.white,
+          side: const BorderSide(color: Colors.white, width: 1),
+          textStyle:
+              AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.surface,
         elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE0E0E0), width: 0.5),
+        ),
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Color(0xFF002366),
-        foregroundColor: Colors.white,
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: AppColors.darkNav,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: AppColors.textSecondary,
+        elevation: 0,
+        type: BottomNavigationBarType.fixed,
       ),
-      colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF002366),
-        secondary: sapsGold,
-        surface: surfaceWhite,
-        background: Color(0xFFF4F6FA),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide:
+              const BorderSide(color: AppColors.primaryOrange, width: 2),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }

@@ -63,8 +63,7 @@ class SosOrchestrator {
 
   /// Fire all three SOS layers simultaneously.
   /// Returns a SosResult describing the outcome of each layer.
-  /// This is the only public trigger — never bypass this method.
-  static Future<SosResult> trigger() async {
+  static Future<SosResult> trigger({String? threatSource}) async {
     if (_isActive) return _currentResult!;
     _isActive = true;
 
@@ -77,9 +76,11 @@ class SosOrchestrator {
     final triggeredAt = DateTime.now().millisecondsSinceEpoch;
     final userId = await SecureStorageService.getUserId() ?? 'guest';
 
+    // ── STEP 0.5: Scan nearby users for exclusion zone (2 second scan max) ──
+    final excludedUserIds = await BluetoothMeshService.getNearbyPeers()
+        .timeout(const Duration(seconds: 2), onTimeout: () => []);
+
     // ── STEP 1: Persist event immediately before anything else ──
-    // This guarantees the event is recorded even if the device
-    // crashes during the trigger sequence.
     await LocalDb.insertSosEvent({
       'id': eventId,
       'user_id': userId,
@@ -87,21 +88,22 @@ class SosOrchestrator {
       'trigger_method': 'app',
       'status': 'active',
       'synced': 0,
+      'excluded_user_ids': excludedUserIds.join(','),
+      'threat_source': threatSource,
     });
 
     debugPrint('[SOS] Event $eventId created — firing all layers');
 
     // ── STEP 2: Fire all layers simultaneously ──────────────────
-    // Future.wait starts all three immediately with no sequencing.
     final results = await Future.wait([
       _fireLayer1Gps(),
       _fireLayer2CellTower(),
       _fireLayer3Bluetooth(userId: userId, triggeredAt: triggeredAt),
     ]);
 
-    final gpsResult   = results[0] as GpsLayerResult;
-    final cellResult  = results[1] as CellLayerResult;
-    final meshResult  = results[2] as bool;
+    final gpsResult = results[0] as GpsLayerResult;
+    final cellResult = results[1] as CellLayerResult;
+    final meshResult = results[2] as bool;
 
     // ── STEP 3: Dispatch SMS immediately ───────────────────────
     // Runs after GPS so we can include coordinates in the message.
@@ -313,6 +315,6 @@ class SosResult {
 
   @override
   String toString() =>
-    'SosResult(gps: ${layer1Gps.success}, cell: ${layer2Cell.success}, '
-    'mesh: $layer3Mesh, sms: ${smsResult.succeeded}/${smsResult.attempted})';
+      'SosResult(gps: ${layer1Gps.success}, cell: ${layer2Cell.success}, '
+      'mesh: $layer3Mesh, sms: ${smsResult.succeeded}/${smsResult.attempted})';
 }

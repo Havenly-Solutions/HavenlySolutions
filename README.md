@@ -1,2 +1,3 @@
-# havenly_solutions
-currently in development, 
+# havenly
+
+A new Flutter project.

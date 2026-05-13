@@ -51,7 +51,7 @@ class EncryptionService {
     'id_number',
     'passport_number',
     'contact_phone_numbers',
-    'medical_conditions',   // Phase 2
+    'medical_conditions', // Phase 2
   ];
 
   static const _keyStorageKey = 'havenly_data_encryption_key';

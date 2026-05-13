@@ -46,6 +46,7 @@
  * ─────────────────────────────────────────────────────────────
  */
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -172,6 +173,51 @@ class BluetoothMeshService {
     }
   }
 
+  /// Scan for nearby Havenly Solutions devices (Bluetooth/WiFi-Direct)
+  /// Returns a list of discovered user IDs.
+  static Future<List<MeshUser>> scanNearbyDevices(
+      {Duration duration = const Duration(seconds: 2)}) async {
+    if (!Platform.isAndroid) return [];
+
+    final hasPermission = await _checkPermissions();
+    if (!hasPermission) return [];
+
+    final List<MeshUser> discoveredUsers = [];
+    final completer = Completer<List<MeshUser>>();
+
+    await Nearby().startDiscovery(
+      'scanner',
+      _strategy,
+      serviceId: _serviceId,
+      onEndpointFound: (endpointId, name, serviceId) {
+        // Assume endpoint name contains the Havenly user ID (per _getDisplayName)
+        if (name.startsWith('havenly_solutions_')) {
+          final userId = name.replaceFirst('havenly_solutions_', '');
+          if (!discoveredUsers.any((u) => u.userId == userId)) {
+            discoveredUsers
+                .add(MeshUser(userId: userId, endpointId: endpointId));
+          }
+        }
+      },
+      onEndpointLost: (endpointId) {
+        discoveredUsers.removeWhere((u) => u.endpointId == endpointId);
+      },
+    );
+
+    Timer(duration, () {
+      Nearby().stopDiscovery();
+      completer.complete(discoveredUsers);
+    });
+
+    return completer.future;
+  }
+
+  static Future<List<String>> getNearbyPeers() async {
+    // Helper for TriangulationManager
+    final users = await scanNearbyDevices();
+    return users.map((u) => u.userId).toList();
+  }
+
   static void stopAll() {
     if (!Platform.isAndroid) return;
     Nearby().stopAdvertising();
@@ -223,6 +269,12 @@ class BluetoothMeshService {
     final id = await SecureStorageService.getUserId();
     return 'havenly_solutions_${id?.substring(0, 8) ?? 'user'}';
   }
+}
+
+class MeshUser {
+  final String userId;
+  final String endpointId;
+  const MeshUser({required this.userId, required this.endpointId});
 }
 
 /// A decoded SOS packet received via Bluetooth mesh relay.
