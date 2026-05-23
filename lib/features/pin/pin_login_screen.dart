@@ -94,9 +94,9 @@ class _PINLoginScreenState extends ConsumerState<PINLoginScreen> {
               style: AppTypography.heading1,
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Enter your PIN to continue',
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(color: Colors.grey),
             ),
             const Spacer(),
             Row(

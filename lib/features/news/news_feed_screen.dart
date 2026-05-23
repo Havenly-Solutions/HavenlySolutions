@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/providers/feed_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
-import 'widgets/post_card.dart';
 
 class NewsFeedScreen extends ConsumerStatefulWidget {
   const NewsFeedScreen({super.key});
@@ -12,7 +10,8 @@ class NewsFeedScreen extends ConsumerStatefulWidget {
   ConsumerState<NewsFeedScreen> createState() => _NewsFeedScreenState();
 }
 
-class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTickerProviderStateMixin {
+class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -37,13 +36,17 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Public Safety', style: AppTypography.heading2.copyWith(fontSize: 18)),
-            Text('Precinct Central', style: AppTypography.label.copyWith(color: AppColors.textSecondary)),
+            Text('Public Safety',
+                style: AppTypography.heading2.copyWith(fontSize: 18)),
+            Text('Precinct Central',
+                style: AppTypography.label
+                    .copyWith(color: AppColors.textSecondary)),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none_outlined, color: Colors.black),
+            icon: const Icon(Icons.notifications_none_outlined,
+                color: Colors.black),
             onPressed: () {},
           ),
         ],
@@ -125,7 +128,9 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,20 +138,29 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.asset('assets/images/stay_safe.png', height: 200, width: double.infinity, fit: BoxFit.cover),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12)),
+                child: Image.asset('assets/images/stay_safe.png',
+                    height: 200, width: double.infinity, fit: BoxFit.cover),
               ),
               Positioned(
                 top: 12,
                 left: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: Colors.red[800], borderRadius: BorderRadius.circular(20)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                      color: Colors.red[800],
+                      borderRadius: BorderRadius.circular(20)),
                   child: const Row(
                     children: [
                       Icon(Icons.error_outline, color: Colors.white, size: 14),
                       SizedBox(width: 4),
-                      Text('URGENT ALERT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
+                      Text('URGENT ALERT',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10)),
                     ],
                   ),
                 ),
@@ -162,7 +176,8 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text('SILVER ALERT: James Peterson', style: AppTypography.heading2.copyWith(fontSize: 18)),
+                      child: Text('SILVER ALERT: James Peterson',
+                          style: AppTypography.heading2.copyWith(fontSize: 18)),
                     ),
                     Text('2h ago', style: AppTypography.label),
                   ],
@@ -191,14 +206,17 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
+                      decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8)),
                       child: const Icon(Icons.share_outlined, size: 20),
                     ),
                   ],
@@ -215,12 +233,21 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey[200]!)),
+        decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[200]!)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
-            Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey)),
+            Text(value,
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -231,7 +258,8 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -239,25 +267,32 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(8)),
-                child: Image.asset('assets/images/logo.png', width: 20, height: 20),
+                decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(8)),
+                child: Image.asset('assets/images/logo.png',
+                    width: 20, height: 20),
               ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Suspicious Activity Report', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('Oakwood Residential Area • 45m ago', style: TextStyle(color: Colors.grey[600], fontSize: 11)),
+                  const Text('Suspicious Activity Report',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('Oakwood Residential Area • 45m ago',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 11)),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 12),
-          const Text('Residents reported an unidentified white van circulating the cul-de-sac multiple times this morning.'),
+          const Text(
+              'Residents reported an unidentified white van circulating the cul-de-sac multiple times this morning.'),
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.asset('assets/images/stay_safe.png', height: 150, width: double.infinity, fit: BoxFit.cover),
+            child: Image.asset('assets/images/stay_safe.png',
+                height: 150, width: double.infinity, fit: BoxFit.cover),
           ),
         ],
       ),
@@ -268,18 +303,29 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('NEIGHBORHOOD SAFETY SCORE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+          const Text('NEIGHBORHOOD SAFETY SCORE',
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey)),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Text('94', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
-              const Text(' /100', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              const Text('94',
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
+              const Text(' /100',
+                  style: TextStyle(fontSize: 14, color: Colors.grey)),
               const Spacer(),
-              Text('+4% improvement from last month', style: TextStyle(color: Colors.green[700], fontSize: 11, fontWeight: FontWeight.bold)),
+              Text('+4% improvement from last month',
+                  style: TextStyle(
+                      color: Colors.green[700],
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 16),
@@ -297,12 +343,19 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-            Text(status, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            Text(label,
+                style: const TextStyle(fontSize: 11, color: Colors.grey)),
+            Text(status,
+                style:
+                    const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 4),
-        LinearProgressIndicator(value: value, backgroundColor: Colors.grey[200], valueColor: const AlwaysStoppedAnimation(Colors.black), minHeight: 4),
+        LinearProgressIndicator(
+            value: value,
+            backgroundColor: Colors.grey[200],
+            valueColor: const AlwaysStoppedAnimation(Colors.black),
+            minHeight: 4),
       ],
     );
   }
@@ -311,7 +364,10 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.orange[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.orange[100]!)),
+      decoration: BoxDecoration(
+          color: Colors.orange[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orange[100]!)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -321,14 +377,23 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> with SingleTick
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.orange[100], borderRadius: BorderRadius.circular(4)),
-                child: const Text('CAUTION', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
+                decoration: BoxDecoration(
+                    color: Colors.orange[100],
+                    borderRadius: BorderRadius.circular(4)),
+                child: const Text('CAUTION',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange)),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text('Severe Weather Warning', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const Text('High winds and potential flooding expected near coastal areas after 8:00 PM tonight.', style: TextStyle(fontSize: 13, color: Colors.black54)),
+          const Text('Severe Weather Warning',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text(
+              'High winds and potential flooding expected near coastal areas after 8:00 PM tonight.',
+              style: TextStyle(fontSize: 13, color: Colors.black54)),
         ],
       ),
     );

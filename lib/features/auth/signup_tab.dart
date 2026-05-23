@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/providers/user_provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_text.dart';
+import '../../core/services/api_service.dart';
+import '../../core/services/storage_service.dart';
 
+/// Signup Tab for Auth Screen
 class SignupTab extends ConsumerStatefulWidget {
-  const SignupTab({super.key});
+  final Function(bool isLoading)? onLoadingChange;
+
+  const SignupTab({
+    super.key,
+    this.onLoadingChange,
+  });
 
   @override
   ConsumerState<SignupTab> createState() => _SignupTabState();
@@ -13,220 +21,479 @@ class SignupTab extends ConsumerStatefulWidget {
 
 class _SignupTabState extends ConsumerState<SignupTab> {
   final _formKey = GlobalKey<FormState>();
-  
-  final _fullNameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  final _idNumberController = TextEditingController();
-  final _emergencyNameController = TextEditingController();
-  final _emergencyPhoneController = TextEditingController();
-  final _pinController = TextEditingController();
-  final _confirmPinController = TextEditingController();
-  
-  DateTime? _selectedDate;
+
+  late TextEditingController _firstNameController;
+  late TextEditingController _lastNameController;
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
+  late TextEditingController _passwordController;
+  late TextEditingController _confirmPasswordController;
+  late TextEditingController _idNumberController;
+  late TextEditingController _emergencyContactNameController;
+  late TextEditingController _emergencyContactPhoneController;
+  late TextEditingController _sosPinController;
+  late TextEditingController _sosPinConfirmController;
+
+  DateTime? _selectedDateOfBirth;
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
   bool _agreedToTerms = false;
   bool _isLoading = false;
+  String? _errorMessage;
+  final _storage = StorageService();
+
+  @override
+  void initState() {
+    super.initState();
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController(text: '+27 '); // SA format
+    _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+    _idNumberController = TextEditingController();
+    _emergencyContactNameController = TextEditingController();
+    _emergencyContactPhoneController = TextEditingController(text: '+27 ');
+    _sosPinController = TextEditingController();
+    _sosPinConfirmController = TextEditingController();
+  }
 
   @override
   void dispose() {
-    _fullNameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _idNumberController.dispose();
-    _emergencyNameController.dispose();
-    _emergencyPhoneController.dispose();
-    _pinController.dispose();
-    _confirmPinController.dispose();
+    _emergencyContactNameController.dispose();
+    _emergencyContactPhoneController.dispose();
+    _sosPinController.dispose();
+    _sosPinConfirmController.dispose();
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _selectDateOfBirth() async {
+    final now = DateTime.now();
+    final firstDate = DateTime(1900);
+    final lastDate =
+        DateTime(now.year - 13, now.month, now.day); // Min 13 years
+
+    final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+      initialDate: _selectedDateOfBirth ?? DateTime(2000, 1, 1),
+      firstDate: firstDate,
+      lastDate: lastDate,
     );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
+
+    if (picked != null) {
+      setState(() => _selectedDateOfBirth = picked);
     }
   }
 
-  Future<void> _signup() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please agree to the Terms & Community Standards')),
-      );
-      return;
-    }
-    if (_selectedDate == null) {
-       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your Date of Birth')),
-      );
+  Future<void> _handleSignup() async {
+    if (!_formKey.currentState!.validate()) {
+      setState(() => _errorMessage = 'Please fill all required fields');
       return;
     }
 
-    setState(() => _isLoading = true);
+    if (_passwordController.text != _confirmPasswordController.text) {
+      setState(() => _errorMessage = 'Passwords do not match');
+      return;
+    }
+
+    if (_sosPinController.text != _sosPinConfirmController.text) {
+      setState(() => _errorMessage = 'SOS PINs do not match');
+      return;
+    }
+
+    if (_sosPinController.text.length != 4) {
+      setState(() => _errorMessage = 'SOS PIN must be 4 digits');
+      return;
+    }
+
+    if (!_agreedToTerms) {
+      setState(
+          () => _errorMessage = 'Please agree to Terms & Community Standards');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    widget.onLoadingChange?.call(true);
+
     try {
-      await ref.read(userProvider.notifier).signup(
-            fullName: _fullNameController.text.trim(),
-            email: _emailController.text.trim(),
-            phone: _phoneController.text.trim(),
-            password: _passwordController.text.trim(),
-            idNumber: _idNumberController.text.trim(),
-            dateOfBirth: _selectedDate!,
-            emergencyContactName: _emergencyNameController.text.trim(),
-            emergencyContactPhone: _emergencyPhoneController.text.trim(),
-            sosPin: _pinController.text.trim(),
-          );
+      final apiService = ApiService();
+      final response = await apiService.signup(
+        fullName: '${_firstNameController.text} ${_lastNameController.text}',
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
+        password: _passwordController.text,
+        idNumber: _idNumberController.text.trim(),
+        dateOfBirth: _selectedDateOfBirth!,
+        emergencyContactName: _emergencyContactNameController.text.trim(),
+        emergencyContactPhone: _emergencyContactPhoneController.text.trim(),
+        sosPin: _sosPinController.text,
+      );
+
       if (mounted) {
+        await _storage.setString('pin_set', 'true');
+        // Navigate to onboarding
         context.go('/onboarding');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Signup failed: \$e')),
-        );
+        setState(() => _errorMessage = 'Signup failed: ${e.toString()}');
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        widget.onLoadingChange?.call(false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(24),
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildTextField(controller: _fullNameController, label: 'Full Name'),
-            const SizedBox(height: 16),
-            _buildTextField(controller: _emailController, label: 'Email', keyboardType: TextInputType.emailAddress),
-            const SizedBox(height: 16),
-            _buildTextField(controller: _phoneController, label: 'Phone Number (+27...)', keyboardType: TextInputType.phone),
-            const SizedBox(height: 16),
-            _buildTextField(controller: _passwordController, label: 'Password', obscureText: true),
-            const SizedBox(height: 16),
-            _buildTextField(controller: _confirmPasswordController, label: 'Confirm Password', obscureText: true),
-            const SizedBox(height: 16),
-            _buildTextField(controller: _idNumberController, label: 'ID Number'),
-            const SizedBox(height: 16),
-            _buildDatePicker(),
-            const SizedBox(height: 16),
-            _buildTextField(controller: _emergencyNameController, label: 'Emergency Contact Name'),
-            const SizedBox(height: 16),
-            _buildTextField(controller: _emergencyPhoneController, label: 'Emergency Contact Phone', keyboardType: TextInputType.phone),
-            const SizedBox(height: 16),
-            const Text(
-              'This PIN is your emergency trigger — memorise it',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-            const SizedBox(height: 4),
-            _buildTextField(controller: _pinController, label: '4-digit SOS PIN', keyboardType: TextInputType.number, maxLength: 4),
-            const SizedBox(height: 16),
-            _buildTextField(controller: _confirmPinController, label: 'Confirm PIN', keyboardType: TextInputType.number, maxLength: 4),
-            const SizedBox(height: 16),
+            // Error message
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.emergency.withOpacity(0.1),
+                  border: Border.all(color: AppColors.emergency),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _errorMessage!,
+                  style: AppText.bodySmall.copyWith(color: AppColors.emergency),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // First Name & Last Name (side by side)
             Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _firstNameController,
+                    decoration: InputDecoration(
+                      labelText: 'First Name',
+                      prefixIcon: const Icon(Icons.person_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) =>
+                        value?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _lastNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Last Name',
+                      prefixIcon: const Icon(Icons.person_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) =>
+                        value?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Email
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                labelText: 'Email Address',
+                prefixIcon: const Icon(Icons.email_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              validator: (value) {
+                if (value?.isEmpty ?? true) return 'Required';
+                if (!value!.contains('@')) return 'Invalid email';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Phone Number
+            TextFormField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: 'Phone Number',
+                hintText: '+27 XX XXX XXXX',
+                prefixIcon: const Icon(Icons.phone_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+            ),
+            const SizedBox(height: 16),
+
+            // Password
+            TextFormField(
+              controller: _passwordController,
+              obscureText: !_isPasswordVisible,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                prefixIcon: const Icon(Icons.lock_outlined),
+                suffixIcon: IconButton(
+                  icon: Icon(_isPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off),
+                  onPressed: () {
+                    setState(() => _isPasswordVisible = !_isPasswordVisible);
+                  },
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              validator: (value) {
+                if (value?.isEmpty ?? true) return 'Required';
+                if (value!.length < 8) return 'Min 8 characters';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Confirm Password
+            TextFormField(
+              controller: _confirmPasswordController,
+              obscureText: !_isConfirmPasswordVisible,
+              decoration: InputDecoration(
+                labelText: 'Confirm Password',
+                prefixIcon: const Icon(Icons.lock_outlined),
+                suffixIcon: IconButton(
+                  icon: Icon(_isConfirmPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off),
+                  onPressed: () {
+                    setState(() =>
+                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
+                  },
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+            ),
+            const SizedBox(height: 16),
+
+            // ID Number
+            TextFormField(
+              controller: _idNumberController,
+              decoration: InputDecoration(
+                labelText: 'ID Number',
+                hintText: 'YYMMDDGGGSSSCAA',
+                prefixIcon: const Icon(Icons.badge_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+            ),
+            const SizedBox(height: 16),
+
+            // Date of Birth
+            GestureDetector(
+              onTap: _selectDateOfBirth,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.divider),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today_outlined),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _selectedDateOfBirth == null
+                            ? 'Select Date of Birth'
+                            : '${_selectedDateOfBirth!.day}/${_selectedDateOfBirth!.month}/${_selectedDateOfBirth!.year}',
+                        style: AppText.bodyLarge.copyWith(
+                          color: _selectedDateOfBirth == null
+                              ? AppColors.textMuted
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Emergency Contact
+            Text(
+              'Emergency Contact',
+              style: AppText.heading2,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _emergencyContactNameController,
+              decoration: InputDecoration(
+                labelText: 'Contact Name',
+                prefixIcon: const Icon(Icons.person_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _emergencyContactPhoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: 'Contact Phone',
+                hintText: '+27 XX XXX XXXX',
+                prefixIcon: const Icon(Icons.phone_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+            ),
+            const SizedBox(height: 24),
+
+            // SOS PIN
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.orange),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'This PIN is your emergency trigger — memorise it',
+                    style: AppText.label.copyWith(
+                      color: AppColors.orange,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _sosPinController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
+                    decoration: InputDecoration(
+                      labelText: '4-Digit SOS PIN',
+                      prefixIcon: const Icon(Icons.pin_outlined),
+                      counterText: '',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value?.isEmpty ?? true) return 'Required';
+                      if (value!.length != 4) return '4 digits required';
+                      if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
+                        return 'Numbers only';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _sosPinConfirmController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
+                    decoration: InputDecoration(
+                      labelText: 'Confirm PIN',
+                      prefixIcon: const Icon(Icons.pin_outlined),
+                      counterText: '',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    validator: (value) =>
+                        value?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Terms checkbox
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Checkbox(
                   value: _agreedToTerms,
-                  onChanged: (val) => setState(() => _agreedToTerms = val ?? false),
-                  side: const BorderSide(color: Colors.white),
+                  onChanged: (value) {
+                    setState(() => _agreedToTerms = value ?? false);
+                  },
                 ),
-                const Expanded(
-                  child: Text(
-                    'I agree to Terms & Community Standards',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _agreedToTerms = !_agreedToTerms);
+                    },
+                    child: Text(
+                      'I agree to Terms & Community Standards',
+                      style: AppText.bodySmall,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _signup,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      )
-                    : const Text('Create Account'),
+
+            // Sign Up button
+            ElevatedButton(
+              onPressed: _isLoading ? null : _handleSignup,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.emergency,
+                disabledBackgroundColor: AppColors.emergency.withOpacity(0.5),
+                padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    bool obscureText = false,
-    TextInputType? keyboardType,
-    int? maxLength,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        maxLength: maxLength,
-        style: const TextStyle(color: Colors.black),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: AppColors.textSecondary),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          counterText: '',
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) return 'Required';
-          return null;
-        },
-      ),
-    );
-  }
-
-  Widget _buildDatePicker() {
-    return GestureDetector(
-      onTap: () => _selectDate(context),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Date of Birth',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _selectedDate == null
-                  ? 'Select Date'
-                  : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-              style: const TextStyle(color: Colors.black),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      'Create Account',
+                      style: AppText.bodyLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ],
         ),

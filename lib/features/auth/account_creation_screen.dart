@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/providers/user_provider.dart';
 
 class AccountCreationScreen extends ConsumerStatefulWidget {
   const AccountCreationScreen({super.key});
 
   @override
-  ConsumerState<AccountCreationScreen> createState() => _AccountCreationScreenState();
+  ConsumerState<AccountCreationScreen> createState() =>
+      _AccountCreationScreenState();
 }
 
 class _AccountCreationScreenState extends ConsumerState<AccountCreationScreen> {
@@ -40,12 +40,18 @@ class _AccountCreationScreenState extends ConsumerState<AccountCreationScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Full Name')),
-            TextField(controller: _idController, decoration: const InputDecoration(labelText: 'ID Number')),
+            TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Full Name')),
+            TextField(
+                controller: _idController,
+                decoration: const InputDecoration(labelText: 'ID Number')),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _createAccount,
-              child: _isLoading ? const CircularProgressIndicator() : const Text('Create Account'),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Create Account'),
             ),
           ],
         ),

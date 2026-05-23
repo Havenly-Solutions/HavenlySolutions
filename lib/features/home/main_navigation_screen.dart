@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import '../news/news_feed_screen.dart';
 import '../chat/chat_screen.dart';
-import '../profile/profile_screen.dart';
 import '../profile/customer_care_screen.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -31,8 +29,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          _screens[_currentIndex == 3 ? 2 : (_currentIndex > 3 ? 4 : _currentIndex)],
-          
+          _screens[
+              _currentIndex == 3 ? 2 : (_currentIndex > 3 ? 4 : _currentIndex)],
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -42,7 +40,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 color: AppColors.white,
                 borderRadius: BorderRadius.circular(40),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 30, offset: const Offset(0, 10)),
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10)),
                 ],
               ),
               child: Row(
@@ -76,9 +77,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isSelected ? Colors.white : AppColors.textSecondary, size: 20),
+            Icon(icon,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+                size: 20),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: isSelected ? Colors.white : AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w600)),
+            Text(label,
+                style: TextStyle(
+                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600)),
           ],
         ),
       ),

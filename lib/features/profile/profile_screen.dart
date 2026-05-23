@@ -22,11 +22,13 @@ class ProfileScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(16.0),
           child: Image.asset('assets/images/logo.png', width: 22, height: 22),
         ),
-        title: Text('Havenly', style: AppTypography.heading2.copyWith(fontSize: 18, color: AppColors.darkNav)),
+        title: Text('Havenly',
+            style: AppTypography.heading2
+                .copyWith(fontSize: 18, color: AppColors.darkNav)),
         centerTitle: false,
-        actions: [
+        actions: const [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(8.0),
             child: CircleAvatar(
               radius: 18,
               backgroundImage: AssetImage('assets/images/logo.png'),
@@ -42,7 +44,8 @@ class ProfileScreen extends ConsumerWidget {
               icon: Icons.person_outline,
               title: 'Account Details',
               items: [
-                _buildActionRow('Personal Information', onTap: () => context.push('/profile/edit')),
+                _buildActionRow('Personal Information',
+                    onTap: () => context.push('/profile/edit')),
                 _buildActionRow('Billing & Subscriptions'),
                 _buildActionRow('Connected Devices'),
               ],
@@ -71,7 +74,8 @@ class ProfileScreen extends ConsumerWidget {
               items: [
                 _buildActionRow('Data Sharing'),
                 _buildActionRow('Location Services'),
-                _buildActionRow('Delete Account', isDestructive: true, onTap: () => _confirmDelete(context)),
+                _buildActionRow('Delete Account',
+                    isDestructive: true, onTap: () => _confirmDelete(context)),
               ],
             ),
             const SizedBox(height: 32),
@@ -90,7 +94,12 @@ class ProfileScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         children: [
@@ -105,22 +114,30 @@ class ProfileScreen extends ConsumerWidget {
                 right: 0,
                 child: Container(
                   padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(color: Color(0xFF2D4F4F), shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                      color: Color(0xFF2D4F4F), shape: BoxShape.circle),
                   child: const Icon(Icons.edit, color: Colors.white, size: 14),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          Text(user?.fullName ?? 'Eleanor Vance', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A3D3D))),
-          Text(user?.email ?? 'eleanor.vance@example.com', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+          Text(user?.fullName ?? 'Eleanor Vance',
+              style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A3D3D))),
+          Text(user?.email ?? 'eleanor.vance@example.com',
+              style: TextStyle(color: Colors.grey[600], fontSize: 13)),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildStatusBadge(null, 'Protected', const Color(0xFF2D4F4F), logo: true),
+              _buildStatusBadge(null, 'Protected', const Color(0xFF2D4F4F),
+                  logo: true),
               const SizedBox(width: 8),
-              _buildStatusBadge(null, 'Premium Plan', Colors.grey[200]!, textColor: Colors.black87),
+              _buildStatusBadge(null, 'Premium Plan', Colors.grey[200]!,
+                  textColor: Colors.black87),
             ],
           ),
         ],
@@ -128,10 +145,12 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusBadge(IconData? icon, String text, Color color, {Color textColor = Colors.white, bool logo = false}) {
+  Widget _buildStatusBadge(IconData? icon, String text, Color color,
+      {Color textColor = Colors.white, bool logo = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)),
+      decoration:
+          BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)),
       child: Row(
         children: [
           if (logo) ...[
@@ -141,16 +160,22 @@ class ProfileScreen extends ConsumerWidget {
             Icon(icon, color: textColor, size: 12),
             const SizedBox(width: 4)
           ],
-          Text(text, style: TextStyle(color: textColor, fontSize: 11, fontWeight: FontWeight.w600)),
+          Text(text,
+              style: TextStyle(
+                  color: textColor, fontSize: 11, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  Widget _buildSection({required IconData icon, required String title, required List<Widget> items}) {
+  Widget _buildSection(
+      {required IconData icon,
+      required String title,
+      required List<Widget> items}) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -160,7 +185,11 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 Icon(icon, size: 18, color: const Color(0xFF1A3D3D)),
                 const SizedBox(width: 12),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1A3D3D))),
+                Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Color(0xFF1A3D3D))),
               ],
             ),
           ),
@@ -170,14 +199,23 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionRow(String title, {bool badge = false, bool isDestructive = false, VoidCallback? onTap}) {
+  Widget _buildActionRow(String title,
+      {bool badge = false, bool isDestructive = false, VoidCallback? onTap}) {
     return ListTile(
       onTap: onTap,
-      title: Text(title, style: TextStyle(fontSize: 14, color: isDestructive ? Colors.red[800] : Colors.black87)),
+      title: Text(title,
+          style: TextStyle(
+              fontSize: 14,
+              color: isDestructive ? Colors.red[800] : Colors.black87)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (badge) Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+          if (badge)
+            Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                    color: Colors.red, shape: BoxShape.circle)),
           const SizedBox(width: 8),
           const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
         ],
@@ -188,7 +226,10 @@ class ProfileScreen extends ConsumerWidget {
   Widget _buildToggleRow(String title, bool value) {
     return ListTile(
       title: Text(title, style: const TextStyle(fontSize: 14)),
-      trailing: Switch(value: value, onChanged: (v) {}, activeColor: const Color(0xFF1A3D3D)),
+      trailing: Switch(
+          value: value,
+          onChanged: (v) {},
+          activeThumbColor: const Color(0xFF1A3D3D)),
     );
   }
 
@@ -206,7 +247,8 @@ class ProfileScreen extends ConsumerWidget {
           backgroundColor: Colors.grey[200],
           foregroundColor: Colors.black87,
           minimumSize: const Size(140, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           elevation: 0,
         ),
       ),
@@ -218,10 +260,15 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Account?'),
-        content: const Text('This action is permanent and will remove all your safety data.'),
+        content: const Text(
+            'This action is permanent and will remove all your safety data.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('DELETE', style: TextStyle(color: Colors.red))),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CANCEL')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('DELETE', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
