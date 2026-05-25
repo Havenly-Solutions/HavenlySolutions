@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../constants/translations.dart';
 import '../security/secure_storage_service.dart';
 
 final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>((ref) {
@@ -25,17 +26,20 @@ class LocaleNotifier extends StateNotifier<Locale> {
     'nr': 'isiNdebele',
   };
 
-  static List<String> get supportedLanguageCodes => supportedLanguages.keys.toList();
+  static List<String> get supportedLanguageCodes =>
+      supportedLanguages.keys.toList();
 
   Future<void> _loadLocale() async {
     final savedLocale = await SecureStorageService.getLocale();
     if (savedLocale != null) {
+      AppTranslations.setLanguage(savedLocale);
       state = Locale(savedLocale);
     }
   }
 
   Future<void> setLocale(String languageCode) async {
     await SecureStorageService.saveLocale(languageCode);
+    AppTranslations.setLanguage(languageCode);
     state = Locale(languageCode);
   }
 }

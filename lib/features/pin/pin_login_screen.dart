@@ -90,7 +90,7 @@ class _PINLoginScreenState extends ConsumerState<PINLoginScreen> {
             Image.asset('assets/images/logo.png', width: 80),
             const SizedBox(height: 32),
             Text(
-              'Welcome Back, \$firstName',
+              'Welcome Back, $firstName',
               style: AppTypography.heading1,
             ),
             const SizedBox(height: 8),
@@ -109,7 +109,7 @@ class _PINLoginScreenState extends ConsumerState<PINLoginScreen> {
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isFilled ? AppColors.brandDeep : Colors.grey[300],
+                    color: isFilled ? AppColors.primary : Colors.grey[300],
                   ),
                 );
               }),
@@ -126,7 +126,15 @@ class _PINLoginScreenState extends ConsumerState<PINLoginScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            _buildKeypad(),
+            if (_isLoading)
+              const SizedBox(
+                height: 140,
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else
+              _buildKeypad(),
           ],
         ),
       ),

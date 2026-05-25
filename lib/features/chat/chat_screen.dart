@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/constants/translations.dart';
 import '../../core/theme/app_typography.dart';
 
 class ChatScreen extends ConsumerWidget {
@@ -17,7 +18,7 @@ class ChatScreen extends ConsumerWidget {
           children: [
             Image.asset('assets/images/logo.png', width: 22, height: 22),
             const SizedBox(width: 8),
-            Text('Safety Communications',
+            Text(AppTranslations.t('safety_communications'),
                 style: AppTypography.heading2.copyWith(fontSize: 18)),
           ],
         ),
@@ -36,21 +37,22 @@ class ChatScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Communications Hub',
-                      style: TextStyle(
+                  Text(AppTranslations.t('communications_hub'),
+                      style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -1)),
                   const SizedBox(height: 8),
                   Text(
-                    'Secure, real-time coordination for public safety personnel and community outreach.',
+                    AppTranslations.t('communications_description'),
                     style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                 ],
               ),
             ),
 
-            _buildSectionHeader('DIRECT MESSAGES', badge: '3 NEW'),
+            _buildSectionHeader(AppTranslations.t('direct_messages'),
+                badge: AppTranslations.t('new_messages_label')),
             _buildDirectMessageItem(context, 'Det. Jane Doe',
                 'Reporting clear on the North side...', '10:42 AM',
                 isActive: true),
@@ -58,20 +60,20 @@ class ChatScreen extends ConsumerWidget {
                 'Understood. Log entry #9921 has...', 'Yesterday'),
 
             const SizedBox(height: 32),
-            _buildSectionHeader('COMMUNITY ROOMS'),
+            _buildSectionHeader(AppTranslations.t('community_rooms')),
             _buildCommunityRoomItem(
               context,
-              'Downtown Safety Watch',
-              '248 Active Members',
-              '"Officer Smith: Increased patrol visibility near Main St. Mall..."',
+              AppTranslations.t('downtown_safety_watch'),
+              AppTranslations.t('active_members', args: ['248']),
+              AppTranslations.t('officer_smith_update'),
               '5m ago',
               Icons.hub_outlined,
             ),
             _buildCommunityRoomItem(
               context,
-              'Emergency Responders',
-              '12 Active First Responders',
-              '"Sgt. Miller: All units, code 4 on the traffic stop at 5th and..."',
+              AppTranslations.t('emergency_responders'),
+              AppTranslations.t('active_members', args: ['12']),
+              AppTranslations.t('sgt_miller_update'),
               '12m ago',
               Icons.groups_outlined,
               isAlert: true,
@@ -210,7 +212,7 @@ class ChatScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                   color: Colors.grey[200],
                                   borderRadius: BorderRadius.circular(4)),
-                              child: const Text('MODERATED',
+                              child: Text(AppTranslations.t('moderated'),
                                   style: TextStyle(
                                       fontSize: 8,
                                       fontWeight: FontWeight.bold,
@@ -240,12 +242,12 @@ class ChatScreen extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Last activity $time',
+                Text(AppTranslations.t('last_activity', args: [time]),
                     style: TextStyle(color: Colors.grey[500], fontSize: 11)),
                 TextButton(
                     onPressed: () =>
                         context.push('/chat/community?title=\$title'),
-                    child: const Text('Join Room',
+                    child: Text(AppTranslations.t('join_room'),
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13,

@@ -3,6 +3,7 @@ import 'home_screen.dart';
 import '../news/news_feed_screen.dart';
 import '../chat/chat_screen.dart';
 import '../profile/customer_care_screen.dart';
+import '../../core/constants/translations.dart';
 import '../../core/theme/app_colors.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -49,11 +50,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(0, Icons.grid_view_rounded, 'Home'),
-                  _buildNavItem(1, Icons.newspaper_rounded, 'News'),
-                  _buildNavItem(2, Icons.chat_bubble_outline_rounded, 'Chat'),
-                  _buildNavItem(3, Icons.sensors_rounded, 'Alerts'),
-                  _buildNavItem(4, Icons.help_outline_rounded, 'Support'),
+                  _buildNavItem(
+                      0, Icons.grid_view_rounded, AppTranslations.t('home')),
+                  _buildNavItem(
+                      1, Icons.newspaper_rounded, AppTranslations.t('feed')),
+                  _buildNavItem(2, Icons.chat_bubble_outline_rounded,
+                      AppTranslations.t('chat')),
+                  _buildNavItem(
+                      3, Icons.sensors_rounded, AppTranslations.t('alerts')),
+                  _buildNavItem(4, Icons.help_outline_rounded,
+                      AppTranslations.t('support')),
                 ],
               ),
             ),

@@ -49,13 +49,13 @@ class _AgreementViewState extends State<AgreementView> {
                     color: Color(0xFF1A3D3D))),
             const SizedBox(height: 12),
             Text(
-              'Please review and accept our legal agreements to activate your Havenly protection.',
+              'Please review and accept our legal agreements to activate your Havenly Solutions protection.',
               style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
             const SizedBox(height: 32),
             _buildAgreementCard(
               'Terms of Service',
-              'Legal guidelines regarding your use of the Havenly platform.',
+              'Legal guidelines regarding your use of the Havenly Solutions platform.',
               _agreedToTerms,
               (val) => setState(() => _agreedToTerms = val ?? false),
             ),

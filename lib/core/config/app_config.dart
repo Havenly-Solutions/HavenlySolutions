@@ -3,7 +3,7 @@ import 'env.dart';
 const bool kIsProduction = true; // flip to true before flutter build --release
 
 class AppConfig {
-  static const String baseUrl = Env.apiBaseUrl;
+  static const String baseUrl = Env.baseUrl;
 
   static String get wsUrl => baseUrl
       .replaceFirst('https://', 'wss://')

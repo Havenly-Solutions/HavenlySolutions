@@ -9,10 +9,12 @@
  * ─────────────────────────────────────────────────────────────
  */
 
+import 'dart:convert';
+
 import 'package:sqflite/sqflite.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import '../security/secure_storage_service.dart';
 
 class LocalDb {
   static Database? _db;
@@ -114,6 +116,8 @@ class LocalDb {
         api_reached INTEGER DEFAULT 0,
         services_notified INTEGER DEFAULT 0,
         status TEXT DEFAULT 'active',
+        threat_source TEXT,
+        excluded_user_ids TEXT,
         rescue_method TEXT,
         rescue_confirmed_at INTEGER,
         closed_at INTEGER,
@@ -371,13 +375,7 @@ class LocalDb {
 
   static Future<void> resetForFreshUser() async {
     await reset();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('has_account');
-    await prefs.remove('user_pin');
-    await prefs.remove('user_phone');
-    await prefs.remove('current_user_id');
-    await prefs.remove('seen_onboarding');
-    await prefs.remove('seen_language');
+    await SecureStorageService.clearAll();
   }
 
   // ── USERS ───────────────────────────────────────────────────
@@ -456,7 +454,64 @@ class LocalDb {
         .query('sos_events', where: 'id = ?', whereArgs: [eventId]);
     return result.isNotEmpty ? result.first : null;
   }
+  // ── OFFLINE QUEUE ───────────────────────────────────────────
 
+  static Future<void> enqueueOfflineRequest({
+    required String id,
+    required String endpoint,
+    required String method,
+    Map<String, dynamic>? payload,
+    int maxRetries = 3,
+  }) async {
+    final database = await db;
+    await database.insert(
+      'offline_queue',
+      {
+        'id': id,
+        'endpoint': endpoint,
+        'method': method,
+        'payload': payload != null ? jsonEncode(payload) : null,
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+        'retry_count': 0,
+        'max_retries': maxRetries,
+        'status': 'PENDING',
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  static Future<List<Map<String, dynamic>>> getPendingOfflineRequests() async {
+    final database = await db;
+    return database.query(
+      'offline_queue',
+      where: 'status = ?',
+      whereArgs: ['PENDING'],
+      orderBy: 'created_at ASC',
+    );
+  }
+
+  static Future<void> updateOfflineRequestStatus(
+    String id, {
+    String? status,
+    int? retryCount,
+  }) async {
+    final database = await db;
+    final updates = <String, Object?>{};
+    if (status != null) updates['status'] = status;
+    if (retryCount != null) updates['retry_count'] = retryCount;
+    if (updates.isEmpty) return;
+    await database.update(
+      'offline_queue',
+      updates,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<void> deleteOfflineRequest(String id) async {
+    final database = await db;
+    await database.delete('offline_queue', where: 'id = ?', whereArgs: [id]);
+  }
   // ── POSTS ───────────────────────────────────────────────────
 
   static Future<void> insertPost(Map<String, dynamic> post) async {

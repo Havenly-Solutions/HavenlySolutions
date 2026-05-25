@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/constants/translations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
@@ -36,9 +37,9 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Public Safety',
+            Text(AppTranslations.t('public_safety'),
                 style: AppTypography.heading2.copyWith(fontSize: 18)),
-            Text('Precinct Central',
+            Text(AppTranslations.t('precinct_central'),
                 style: AppTypography.label
                     .copyWith(color: AppColors.textSecondary)),
           ],
@@ -60,10 +61,10 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
               indicatorColor: Colors.transparent,
               labelPadding: const EdgeInsets.symmetric(horizontal: 8),
               tabs: [
-                _buildTab('All Alerts', true),
-                _buildTab('Missing Persons', false),
-                _buildTab('Security Concerns', false),
-                _buildTab('Weather', false),
+                _buildTab(AppTranslations.t('all_alerts'), true),
+                _buildTab(AppTranslations.t('missing_persons'), false),
+                _buildTab(AppTranslations.t('security_concerns'), false),
+                _buildTab(AppTranslations.t('weather'), false),
               ],
             ),
           ),
@@ -111,7 +112,7 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
       child: ElevatedButton.icon(
         onPressed: () {},
         icon: const Icon(Icons.post_add),
-        label: const Text('Post Alert'),
+        label: Text(AppTranslations.t('post_alert')),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
@@ -152,11 +153,12 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
                   decoration: BoxDecoration(
                       color: Colors.red[800],
                       borderRadius: BorderRadius.circular(20)),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.error_outline, color: Colors.white, size: 14),
-                      SizedBox(width: 4),
-                      Text('URGENT ALERT',
+                      const Icon(Icons.error_outline,
+                          color: Colors.white, size: 14),
+                      const SizedBox(width: 4),
+                      Text(AppTranslations.t('urgent_alert'),
                           style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -176,23 +178,26 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text('SILVER ALERT: James Peterson',
+                      child: Text(AppTranslations.t('silver_alert_title'),
                           style: AppTypography.heading2.copyWith(fontSize: 18)),
                     ),
-                    Text('2h ago', style: AppTypography.label),
+                    Text(AppTranslations.t('two_hours_ago'),
+                        style: AppTypography.label),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Last seen near the North Precinct Central Park at 4:30 PM. Wearing a tan windbreaker...',
+                  AppTranslations.t('silver_alert_body'),
                   style: AppTypography.bodySmall,
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _buildInfoBadge('AGE', '68 Years'),
+                    _buildInfoBadge(AppTranslations.t('age'),
+                        '68 ' + AppTranslations.t('years')),
                     const SizedBox(width: 12),
-                    _buildInfoBadge('LOCATION', 'Central District'),
+                    _buildInfoBadge(AppTranslations.t('location'),
+                        AppTranslations.t('central_district')),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -202,7 +207,7 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
                       child: ElevatedButton.icon(
                         onPressed: () {},
                         icon: const Icon(Icons.phone),
-                        label: const Text('Contact Authorities'),
+                        label: Text(AppTranslations.t('contact_authorities')),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black,
                           foregroundColor: Colors.white,

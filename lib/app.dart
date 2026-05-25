@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/constants/translations.dart';
+import 'core/providers/connectivity_provider.dart';
+import 'core/services/offline_sync_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/providers/locale_provider.dart';
@@ -12,10 +15,19 @@ class HavenlyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
 
+    // Listen to connectivity changes and sync pending requests
+    ref.listen(connectivityProvider, (_, connectivityStatus) {
+      if (connectivityStatus == ConnectivityStatus.online) {
+        OfflineSyncService.instance.syncPendingRequests();
+      }
+    });
+
+    AppTranslations.setLanguage(locale.languageCode);
+
     return MaterialApp.router(
       title: 'Havenly Solutions',
-      theme: AppTheme.light,
-      routerConfig: appRouter,
+      theme: AppTheme.lightTheme,
+      routerConfig: ref.watch(appRouterProvider),
       locale: locale,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -40,13 +52,22 @@ class HavenlyApp extends ConsumerWidget {
   }
 }
 
-class _MaterialLocalizationsFallbackDelegate extends LocalizationsDelegate<MaterialLocalizations> {
+class _MaterialLocalizationsFallbackDelegate
+    extends LocalizationsDelegate<MaterialLocalizations> {
   const _MaterialLocalizationsFallbackDelegate();
 
   @override
   bool isSupported(Locale locale) => [
-    'zu', 'xh', 'nso', 'tn', 'st', 'ts', 'ss', 've', 'nr'
-  ].contains(locale.languageCode);
+        'zu',
+        'xh',
+        'nso',
+        'tn',
+        'st',
+        'ts',
+        'ss',
+        've',
+        'nr'
+      ].contains(locale.languageCode);
 
   @override
   Future<MaterialLocalizations> load(Locale locale) async {

@@ -17,7 +17,7 @@ class CustomerCareScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Image.asset('assets/images/logo.png', width: 22, height: 22),
         ),
-        title: Text('Havenly',
+        title: Text('Havenly Solutions',
             style: AppTypography.heading2
                 .copyWith(fontSize: 18, color: AppColors.darkNav)),
         centerTitle: false,
@@ -59,7 +59,7 @@ class CustomerCareScreen extends StatelessWidget {
                 Icons.email_outlined,
                 'Email Support',
                 'For detailed inquiries and attachments.',
-                'support@havenly.com'),
+                'support@havenly.solutions'),
             const SizedBox(height: 16),
             _buildCommunityForum(),
             const SizedBox(height: 120),

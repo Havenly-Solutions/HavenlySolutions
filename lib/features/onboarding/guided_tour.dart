@@ -49,7 +49,7 @@ class GuidedTour {
       _buildTarget(
         chatSearchKey,
         'Chat Search',
-        'Search for other Havenly users by name.',
+        'Search for other Havenly Solutions users by name.',
         ContentAlign.bottom,
       ),
       _buildTarget(

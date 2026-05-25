@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/services/storage_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -87,13 +87,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         const SizedBox(height: 32),
                         Text(
                           slide.title,
-                          style: AppText.heading1,
+                          style: AppTypography.heading1,
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           slide.body,
-                          style: AppText.bodyLarge,
+                          style: AppTypography.bodyLarge,
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -132,7 +132,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           onPressed: _skip,
                           child: Text(
                             'Skip',
-                            style: AppText.bodyLarge.copyWith(
+                            style: AppTypography.bodyLarge.copyWith(
                               color: AppColors.textSecondary,
                             ),
                           ),
@@ -150,7 +150,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             _currentPage == _slides.length - 1
                                 ? 'Finish'
                                 : 'Next',
-                            style: AppText.bodyLarge.copyWith(
+                            style: AppTypography.bodyLarge.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),

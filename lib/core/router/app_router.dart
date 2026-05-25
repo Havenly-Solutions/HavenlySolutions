@@ -1,8 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/splash/splash_screen.dart';
-import '../../features/language/language_selection_screen.dart';
+import '../../features/language/language_screen.dart';
+import '../../features/auth/account_creation_screen.dart';
 import '../../features/auth/auth_screen.dart';
+import '../../features/auth/models/signup_data.dart';
+import '../../features/auth/signup_screen.dart';
+import '../../features/auth/login_screen.dart';
+import '../../features/auth/biometric_setup_screen.dart';
 import '../../features/pin/pin_creation_screen.dart';
 import '../../features/pin/pin_login_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
@@ -30,14 +36,38 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AuthScreen(),
       ),
       GoRoute(
+        path: '/login',
+        name: 'login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/signup',
+        name: 'signup',
+        builder: (context, state) => const SignupScreen(),
+      ),
+      GoRoute(
+        path: '/biometric-setup',
+        name: 'biometricSetup',
+        builder: (context, state) => const BiometricSetupScreen(),
+      ),
+      GoRoute(
+        path: '/account-creation',
+        name: 'accountCreation',
+        builder: (context, state) {
+          final signupData =
+              state.extra is SignupData ? state.extra as SignupData : null;
+          return AccountCreationScreen(signupData: signupData);
+        },
+      ),
+      GoRoute(
         path: '/pin-login',
         name: 'pinLogin',
-        builder: (context, state) => const PinLoginScreen(),
+        builder: (context, state) => const PINLoginScreen(),
       ),
       GoRoute(
         path: '/pin-creation',
         name: 'pinCreation',
-        builder: (context, state) => const PinCreationScreen(),
+        builder: (context, state) => const PINCreationScreen(),
       ),
       GoRoute(
         path: '/onboarding',

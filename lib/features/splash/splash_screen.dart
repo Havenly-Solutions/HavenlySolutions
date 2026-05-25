@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/security/secure_storage_service.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/services/storage_service.dart';
 
-/// Splash Screen
-///
-/// Spec:
-/// - Background: stay_safe.png (full bleed, BoxFit.cover)
-/// - Content: Havenly Solutions logo + tagline + animated progress bar
-/// - Duration: 2.5 seconds
-///
-/// Routing logic:
-/// - If (first launch) → Language Selection
-/// - If (returning user + PIN set) → PIN Screen
-/// - If (returning user + no PIN) → Auth Screen
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -24,155 +14,146 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _progressController;
-  final _storage = StorageService();
+  late AnimationController _controller;
+  late Animation<double> _fadeAnim;
+  bool _showButton = false;
+  String _nextRoute = '/language';
 
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
 
-    _progressController = AnimationController(
-      duration: const Duration(milliseconds: 2500),
+    _controller = AnimationController(
       vsync: this,
+      duration: const Duration(milliseconds: 600),
     );
+    _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _controller.forward();
 
-    _progressController.forward().then((_) {
-      _handleNavigation();
+    _checkAutoNavigate();
+  }
+
+  Future<void> _checkAutoNavigate() async {
+    await Future.delayed(const Duration(milliseconds: 2500));
+    if (!mounted) return;
+
+    final onboarded = await SecureStorageService.isOnboarded();
+    final hasAccount = await _hasSavedAccount();
+
+    if (hasAccount && onboarded) {
+      _nextRoute = '/auth';
+      _navigate();
+      return;
+    }
+
+    _nextRoute = onboarded ? '/auth' : '/language';
+    if (!mounted) return;
+    setState(() {
+      _showButton = true;
     });
+  }
+
+  Future<bool> _hasSavedAccount() async {
+    final token = await SecureStorageService.getAccessToken();
+    final pinSet = await SecureStorageService.isPinSet();
+    return (token != null && token.isNotEmpty) || pinSet;
+  }
+
+  void _navigate() {
+    context.go(_nextRoute);
   }
 
   @override
   void dispose() {
-    _progressController.dispose();
+    _controller.dispose();
     super.dispose();
-  }
-
-  Future<void> _handleNavigation() async {
-    if (!mounted) return;
-
-    try {
-      // Check if user has completed onboarding
-      final onboarded = await _storage.hasKey('onboarded');
-
-      if (!onboarded) {
-        // First launch → Language Selection
-        if (mounted) {
-          context.go('/language');
-        }
-      } else {
-        // Returning user — check PIN status
-        final pinSet = await _storage.hasKey('pin_set');
-
-        if (mounted) {
-          if (pinSet) {
-            // PIN set → PIN Login Screen
-            context.go('/pin-login');
-          } else {
-            // No PIN → Auth Screen
-            context.go('/auth');
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('[SplashScreen] Navigation error: $e');
-      // Fallback to language selection on error
-      if (mounted) {
-        context.go('/language');
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Background image (stay_safe.png)
-          Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/stay_safe.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-
-          // Semi-transparent overlay for text legibility
-          Container(
-            color: Colors.black.withOpacity(0.3),
-          ),
-
-          // Content
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo + Tagline
-              Center(
-                child: Column(
-                  children: [
-                    // Havenly logo
-                    Text(
-                      'Havenly Solutions',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Your Haven. Your Community. Always On.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+      body: FadeTransition(
+        opacity: _fadeAnim,
+        child: Stack(
+          children: [
+            // Background image
+            Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/stay_safe.png'),
+                  fit: BoxFit.cover,
                 ),
               ),
-            ],
-          ),
-
-          // Progress bar at bottom
-          Positioned(
-            bottom: 48,
-            left: 0,
-            right: 0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: AnimatedBuilder(
-                    animation: _progressController,
-                    builder: (context, child) {
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: LinearProgressIndicator(
-                          value: _progressController.value,
-                          minHeight: 4,
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.emergency,
-                          ),
-                        ),
-                      );
-                    },
+            ),
+            // Overlay for content - centered in middle
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Logo
+                  Image.asset(
+                    'assets/images/logo.png',
+                    width: 150,
+                    height: 150,
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'HAVENLY SOLUTIONS',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 3,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Your Haven. Your Community. Always On.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color.fromARGB(179, 255, 0, 0),
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Get started button
+            if (_showButton)
+              Positioned(
+                bottom: 32,
+                left: 24,
+                right: 24,
+                child: SizedBox(
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _navigate,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.primary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(32),
+                      ),
+                    ),
+                    child: const Text(
+                      'Get started',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Initializing...',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withOpacity(0.6),
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
+              ),
+          ],
+        ),
       ),
     );
   }

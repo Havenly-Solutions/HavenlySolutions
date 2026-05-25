@@ -1,3 +1,4 @@
+import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
@@ -32,6 +33,17 @@ class UserNotifier extends StateNotifier<User?> {
   Future<void> login(String email, String password) async {
     final response = await _apiService.login(email: email, password: password);
     state = response.user;
+    await SecureStorageService.saveUserId(response.user.id);
+  }
+
+  Future<void> loginWithToken(String accessToken) async {
+    await SecureStorageService.saveTokens(
+      accessToken: accessToken,
+      refreshToken: '',
+    );
+    final user = await _apiService.getCurrentUser();
+    state = user;
+    await SecureStorageService.saveUserId(user.id);
   }
 
   Future<void> signup({
@@ -41,6 +53,8 @@ class UserNotifier extends StateNotifier<User?> {
     required String password,
     required String idNumber,
     required DateTime dateOfBirth,
+    required String address,
+    required String postalCode,
     required String emergencyContactName,
     required String emergencyContactPhone,
     required String sosPin,
@@ -52,11 +66,16 @@ class UserNotifier extends StateNotifier<User?> {
       password: password,
       idNumber: idNumber,
       dateOfBirth: dateOfBirth,
+      address: address,
+      postalCode: postalCode,
       emergencyContactName: emergencyContactName,
       emergencyContactPhone: emergencyContactPhone,
       sosPin: sosPin,
     );
     state = response.user;
+    await SecureStorageService.saveUserId(response.user.id);
+    await SecureStorageService.savePinHash(
+        BCrypt.hashpw(sosPin, BCrypt.gensalt(logRounds: 10)));
     await SecureStorageService.setPinSet(true);
   }
 

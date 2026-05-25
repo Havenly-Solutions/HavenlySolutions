@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:camera/camera.dart';
 import 'dart:async';
+import '../../../core/constants/translations.dart';
 
 class IdentityVerificationView extends StatefulWidget {
   final VoidCallback onComplete;
@@ -17,7 +17,8 @@ class _IdentityVerificationViewState extends State<IdentityVerificationView> {
   List<CameraDescription>? _cameras;
   bool _isInitializing = true;
   bool _isScanning = false;
-  String _statusMessage = 'Position your face\nwithin the frame';
+  String _statusMessage = AppTranslations.t('identity_scan_ready');
+  String? _cameraError;
 
   @override
   void initState() {
@@ -46,9 +47,14 @@ class _IdentityVerificationViewState extends State<IdentityVerificationView> {
         );
 
         await _controller!.initialize();
+        _cameraError = null;
+      } else {
+        _cameraError = 'No camera available on this device.';
       }
     } catch (e) {
       debugPrint('Camera initialization error: $e');
+      _cameraError =
+          'Camera unavailable. Please grant permission and try again.';
     } finally {
       if (mounted) {
         setState(() {
@@ -65,16 +71,25 @@ class _IdentityVerificationViewState extends State<IdentityVerificationView> {
   }
 
   void _startScan() {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      setState(() {
+        _cameraError = AppTranslations.t('camera_not_ready_retry');
+      });
+      return;
+    }
+
     setState(() {
+      _cameraError = null;
       _isScanning = true;
-      _statusMessage = 'Scanning face...';
+      _statusMessage = AppTranslations.t('identity_scanning');
     });
 
     // Simulate scanning process
     Timer(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Verification Successful!';
+          _statusMessage = AppTranslations.t('verification_successful');
+          _isScanning = false;
         });
         Timer(const Duration(seconds: 1), () {
           if (mounted) {
@@ -91,14 +106,14 @@ class _IdentityVerificationViewState extends State<IdentityVerificationView> {
       padding: const EdgeInsets.all(24.0),
       child: Column(
         children: [
-          const Text('Identity Verification',
-              style: TextStyle(
+          Text(AppTranslations.t('identity_verification'),
+              style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF1A3D3D))),
           const SizedBox(height: 4),
-          const Text('Step 2 of 2',
-              style: TextStyle(fontSize: 12, color: Colors.grey)),
+          Text(AppTranslations.t('step_2_of_2'),
+              style: const TextStyle(fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 32),
           Text(
             _statusMessage,
@@ -109,11 +124,37 @@ class _IdentityVerificationViewState extends State<IdentityVerificationView> {
                 color: Color(0xFF1A3D3D)),
           ),
           const SizedBox(height: 12),
-          const Text('Ensure good lighting and remove glasses if possible.',
+          Text(AppTranslations.t('identity_verification_instructions'),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontSize: 14)),
+              style: const TextStyle(color: Colors.grey, fontSize: 14)),
           const SizedBox(height: 48),
-
+          if (_cameraError != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.08),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _cameraError!,
+                      style: const TextStyle(color: Colors.red, fontSize: 13),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _isInitializing ? null : _initCamera,
+                    child: Text(AppTranslations.t('retry')),
+                  ),
+                ],
+              ),
+            ),
+          ],
           // Face Frame with Camera Preview
           Stack(
             alignment: Alignment.center,
@@ -241,7 +282,9 @@ class _IdentityVerificationViewState extends State<IdentityVerificationView> {
 
           const SizedBox(height: 40),
           ElevatedButton.icon(
-            onPressed: _isScanning || _isInitializing ? null : _startScan,
+            onPressed: _cameraError != null || _isInitializing
+                ? null
+                : (_isScanning ? null : _startScan),
             icon: _isScanning
                 ? const SizedBox(
                     width: 18,

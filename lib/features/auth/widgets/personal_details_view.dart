@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_typography.dart';
 import '../../../core/constants/translations.dart';
+import '../models/signup_data.dart';
 
 class PersonalDetailsView extends StatefulWidget {
-  final VoidCallback onContinue;
+  final void Function(SignupData data) onContinue;
   const PersonalDetailsView({super.key, required this.onContinue});
 
   @override
@@ -22,19 +22,26 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _idController = TextEditingController();
-  final TextEditingController _phoneController =
-      TextEditingController(text: '+27 ');
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _postalCodeController = TextEditingController();
   final TextEditingController _communityController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
 
-  final List<String> _titles = ['Mr', 'Mrs', 'Ms', 'Dr', 'Prof', 'Rev'];
+  final List<String> _titles = [
+    AppTranslations.t('title_mr'),
+    AppTranslations.t('title_mrs'),
+    AppTranslations.t('title_ms'),
+    AppTranslations.t('title_dr'),
+    AppTranslations.t('title_prof'),
+    AppTranslations.t('title_rev'),
+  ];
   final List<String> _genders = [
-    'Male',
-    'Female',
-    'Other',
-    'Prefer not to say'
+    AppTranslations.t('gender_male'),
+    AppTranslations.t('gender_female'),
+    AppTranslations.t('gender_other'),
+    AppTranslations.t('gender_prefer_not_to_say'),
   ];
 
   List<String> get _races => [
@@ -73,6 +80,42 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
     }
   }
 
+  void _continue() {
+    if (_formKey.currentState?.validate() ?? false) {
+      final signupData = SignupData(
+        title: _selectedTitle!,
+        firstName: _firstNameController.text.trim(),
+        surname: _surnameController.text.trim(),
+        gender: _selectedGender!,
+        race: _selectedRace!,
+        dateOfBirth: _selectedDate!,
+        idNumber: _idController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+        email: _emailController.text.trim(),
+        address: _addressController.text.trim(),
+        postalCode: _postalCodeController.text.trim(),
+        community: _communityController.text.trim(),
+      );
+      widget.onContinue(signupData);
+    } else {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _surnameController.dispose();
+    _idController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _addressController.dispose();
+    _postalCodeController.dispose();
+    _communityController.dispose();
+    _dobController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -82,21 +125,21 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('STEP 1 OF 2',
-                style: TextStyle(
+            Text(AppTranslations.t('step_1_of_2'),
+                style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF1A3D3D),
                     letterSpacing: 1.2)),
             const SizedBox(height: 8),
-            const Text('Personal Details',
-                style: TextStyle(
+            Text(AppTranslations.t('personal_details'),
+                style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1A3D3D))),
             const SizedBox(height: 8),
             Text(
-              'Please provide your accurate information to ensure a secure setup within Havenly.',
+              AppTranslations.t('personal_details_sub'),
               style: TextStyle(color: Colors.grey[600], fontSize: 13),
             ),
             const SizedBox(height: 24),
@@ -111,78 +154,158 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildDropdown(
-                      'Title',
-                      'Select Title',
-                      _titles,
-                      _selectedTitle,
-                      (val) => setState(() => _selectedTitle = val)),
-                  const SizedBox(height: 16),
-                  _buildTextField('First Name', 'Enter your first name',
-                      controller: _firstNameController),
-                  const SizedBox(height: 16),
-                  _buildTextField('Surname', 'Enter your surname',
-                      controller: _surnameController),
-                  const SizedBox(height: 16),
-                  _buildDropdown(
-                      'Gender',
-                      'Select Gender',
-                      _genders,
-                      _selectedGender,
-                      (val) => setState(() => _selectedGender = val)),
+                    AppTranslations.t('title'),
+                    AppTranslations.t('select_title'),
+                    _titles,
+                    _selectedTitle,
+                    (val) => setState(() => _selectedTitle = val),
+                    validator: (value) => value == null
+                        ? AppTranslations.t('error_required')
+                        : null,
+                  ),
                   const SizedBox(height: 16),
                   _buildTextField(
-                    'Date of Birth',
-                    'mm/dd/yyyy',
+                    AppTranslations.t('first_name'),
+                    AppTranslations.t('enter_first_name'),
+                    controller: _firstNameController,
+                    validator: (value) => value?.trim().isEmpty ?? true
+                        ? AppTranslations.t('error_required')
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    AppTranslations.t('surname'),
+                    AppTranslations.t('enter_surname'),
+                    controller: _surnameController,
+                    validator: (value) => value?.trim().isEmpty ?? true
+                        ? AppTranslations.t('error_required')
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDropdown(
+                    AppTranslations.t('gender'),
+                    AppTranslations.t('select_gender'),
+                    _genders,
+                    _selectedGender,
+                    (val) => setState(() => _selectedGender = val),
+                    validator: (value) => value == null
+                        ? AppTranslations.t('error_required')
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    AppTranslations.t('date_of_birth'),
+                    AppTranslations.t('date_format_hint'),
                     controller: _dobController,
                     suffixIcon: Icons.calendar_today_outlined,
                     readOnly: true,
                     onTap: () => _selectDate(context),
+                    validator: (value) => _selectedDate == null
+                        ? AppTranslations.t('error_select_date')
+                        : null,
                   ),
                   const SizedBox(height: 16),
-                  _buildTextField('ID Number / Passport', 'Enter ID number',
-                      controller: _idController),
+                  _buildTextField(
+                    AppTranslations.t('id_number_passport'),
+                    AppTranslations.t('enter_id_number'),
+                    controller: _idController,
+                    keyboardType: TextInputType.number,
+                    validator: (value) => value?.trim().isEmpty ?? true
+                        ? AppTranslations.t('error_required')
+                        : null,
+                  ),
                   const SizedBox(height: 16),
                   _buildDropdown(
-                      'Race / Ethnicity',
-                      'Select Identity',
-                      _races,
-                      _selectedRace,
-                      (val) => setState(() => _selectedRace = val)),
-                  const SizedBox(height: 16),
-                  _buildTextField('Phone Number', '+27 (00) 000-0000',
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone),
-                  const SizedBox(height: 16),
-                  _buildTextField('Email Address', 'name@example.com',
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress),
+                    AppTranslations.t('race_ethnicity'),
+                    AppTranslations.t('select_identity'),
+                    _races,
+                    _selectedRace,
+                    (val) => setState(() => _selectedRace = val),
+                    validator: (value) => value == null
+                        ? AppTranslations.t('error_required')
+                        : null,
+                  ),
                   const SizedBox(height: 16),
                   _buildTextField(
-                      'Residential Address', '123 Havenly Lane, Suite 100',
-                      controller: _addressController),
+                    AppTranslations.t('phone'),
+                    AppTranslations.t('enter_phone_number'),
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    prefixText: '+27 ',
+                    validator: (value) {
+                      if (value?.trim().isEmpty ?? true) {
+                        return AppTranslations.t('error_required');
+                      }
+                      final digitsOnly =
+                          value!.replaceAll(RegExp(r'[^0-9]'), '');
+                      if (digitsOnly.length < 9 || digitsOnly.length > 10) {
+                        return AppTranslations.t('error_invalid_phone');
+                      }
+                      return null;
+                    },
+                  ),
                   const SizedBox(height: 16),
-                  _buildTextField('Community / Neighborhood',
-                      'Search for your community...',
-                      controller: _communityController,
-                      icon: Icons.location_on_outlined),
+                  _buildTextField(
+                    AppTranslations.t('email'),
+                    AppTranslations.t('email_hint'),
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value?.trim().isEmpty ?? true)
+                        return AppTranslations.t('error_required');
+                      if (!RegExp(r'^\S+@\S+\.\S+$').hasMatch(value!.trim())) {
+                        return AppTranslations.t('error_invalid_email');
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    AppTranslations.t('address'),
+                    AppTranslations.t('enter_residential_address'),
+                    controller: _addressController,
+                    validator: (value) => value?.trim().isEmpty ?? true
+                        ? AppTranslations.t('error_required')
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    AppTranslations.t('postal_code'),
+                    AppTranslations.t('enter_postal_code'),
+                    controller: _postalCodeController,
+                    keyboardType: TextInputType.number,
+                    validator: (value) => value?.trim().isEmpty ?? true
+                        ? AppTranslations.t('error_required')
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    AppTranslations.t('community'),
+                    AppTranslations.t('search_community'),
+                    controller: _communityController,
+                    icon: Icons.location_on_outlined,
+                    validator: (value) => value?.trim().isEmpty ?? true
+                        ? AppTranslations.t('error_required')
+                        : null,
+                  ),
                   const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: widget.onContinue,
+                    onPressed: _continue,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF003333),
                       minimumSize: const Size(double.infinity, 56),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Continue to Identity Scan',
-                            style: TextStyle(
+                        Text(AppTranslations.t('continue_to_identity_scan'),
+                            style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold)),
-                        SizedBox(width: 8),
-                        Icon(Icons.arrow_forward,
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward,
                             color: Colors.white, size: 18),
                       ],
                     ),
@@ -206,6 +329,8 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
     bool readOnly = false,
     VoidCallback? onTap,
     TextInputType? keyboardType,
+    String? prefixText,
+    String? Function(String?)? validator,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,11 +346,13 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.grey[200]!),
           ),
-          child: TextField(
+          child: TextFormField(
             controller: controller,
             readOnly: readOnly,
             onTap: onTap,
             keyboardType: keyboardType,
+            validator: validator,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             style: const TextStyle(fontSize: 13, color: Colors.black87),
             decoration: InputDecoration(
               icon: icon != null
@@ -238,6 +365,7 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
                   : null,
               hintText: hint,
               hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+              prefixText: prefixText,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
             ),
@@ -248,7 +376,8 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
   }
 
   Widget _buildDropdown(String label, String hint, List<String> items,
-      String? value, ValueChanged<String?> onChanged) {
+      String? value, ValueChanged<String?> onChanged,
+      {String? Function(String?)? validator}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -265,7 +394,7 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButtonFormField<String>(
-              initialValue: value,
+              value: value,
               hint: Text(hint,
                   style: const TextStyle(color: Colors.grey, fontSize: 13)),
               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
@@ -281,6 +410,8 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
                 );
               }).toList(),
               onChanged: onChanged,
+              validator: validator,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
             ),
           ),
         ),

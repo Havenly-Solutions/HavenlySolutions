@@ -1,10 +1,111 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
+import '../../core/services/biometric_service.dart';
+import '../../core/security/secure_storage_service.dart';
+import '../../core/providers/user_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/translations.dart';
 
-class AuthScreen extends StatelessWidget {
+class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
+
+  @override
+  ConsumerState<AuthScreen> createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends ConsumerState<AuthScreen> {
+  bool _biometricAvailable = false;
+  List<BiometricType> _availableBiometries = [];
+  bool _isCheckingBiometric = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBiometricAvailability();
+  }
+
+  Future<void> _loadBiometricAvailability() async {
+    final enabled = await BiometricService.instance.isBiometricLoginEnabled();
+    if (!enabled) return;
+    final types = await BiometricService.instance.getAvailableTypes();
+    if (!mounted) return;
+    setState(() {
+      _biometricAvailable = true;
+      _availableBiometries = types;
+    });
+  }
+
+  Future<void> _authenticateBiometric(BuildContext context) async {
+    if (_isCheckingBiometric) return;
+    setState(() => _isCheckingBiometric = true);
+    final notifier = ref.read(userProvider.notifier);
+
+    final result = await BiometricService.instance.authenticate(
+      reason: 'Use biometrics to sign in to Havenly Solutions',
+      allowDeviceCredential: true,
+    );
+
+    if (!mounted) return;
+    setState(() => _isCheckingBiometric = false);
+
+    if (result == BiometricResult.success) {
+      final token = await SecureStorageService.getAccessToken();
+      if (token != null && token.isNotEmpty) {
+        try {
+          await notifier.loginWithToken(token);
+          final pinSet = await SecureStorageService.isPinSet();
+          if (!mounted) return;
+          // ignore: use_build_context_synchronously
+          final router = GoRouter.of(context);
+          router.go(pinSet ? '/pin-login' : '/pin-creation');
+          return;
+        } catch (e) {
+          if (!mounted) return;
+          // ignore: use_build_context_synchronously
+          final messenger = ScaffoldMessenger.of(context);
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Biometric login failed.')),
+          );
+        }
+      } else {
+        if (!mounted) return;
+        // ignore: use_build_context_synchronously
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Biometric login failed.')),
+        );
+      }
+    }
+
+    if (result == BiometricResult.notAvailable ||
+        result == BiometricResult.notEnrolled) {
+      if (!mounted) return;
+      // ignore: use_build_context_synchronously
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Biometric login is not available.')),
+      );
+    }
+  }
+
+  String _biometricLabel() {
+    if (_availableBiometries.contains(BiometricType.face)) {
+      return 'Use Face ID';
+    }
+    if (_availableBiometries.contains(BiometricType.fingerprint)) {
+      return 'Use Fingerprint';
+    }
+    return 'Use Biometric Login';
+  }
+
+  IconData _biometricIcon() {
+    if (_availableBiometries.contains(BiometricType.face)) {
+      return Icons.face_retouching_natural;
+    }
+    return Icons.fingerprint;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +184,26 @@ class AuthScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(AppTranslations.t('welcome_sub'),
                       style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 24),
+                  if (_biometricAvailable)
+                    Column(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _isCheckingBiometric
+                              ? null
+                              : () => _authenticateBiometric(context),
+                          icon: Icon(_biometricIcon(), size: 22),
+                          label: Text(_biometricLabel()),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            minimumSize: const Size(double.infinity, 56),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   _buildInput(Icons.email_outlined, AppTranslations.t('email')),
                   const SizedBox(height: 16),
                   _buildInput(
@@ -91,8 +211,7 @@ class AuthScreen extends StatelessWidget {
                       isObscure: true),
                   const SizedBox(height: 40),
                   ElevatedButton(
-                    onPressed: () => context
-                        .go('/onboarding'), // New user flow: Auth -> Onboarding
+                    onPressed: () => context.go('/login'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       minimumSize: const Size(double.infinity, 60),

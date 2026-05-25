@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/storage_service.dart';
 
@@ -127,7 +127,7 @@ class _SignupTabState extends ConsumerState<SignupTab> {
 
     try {
       final apiService = ApiService();
-      final response = await apiService.signup(
+      await apiService.signup(
         fullName: '${_firstNameController.text} ${_lastNameController.text}',
         email: _emailController.text.trim(),
         phone: _phoneController.text.trim(),
@@ -176,7 +176,8 @@ class _SignupTabState extends ConsumerState<SignupTab> {
                 ),
                 child: Text(
                   _errorMessage!,
-                  style: AppText.bodySmall.copyWith(color: AppColors.emergency),
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.emergency),
                 ),
               ),
               const SizedBox(height: 16),
@@ -338,7 +339,7 @@ class _SignupTabState extends ConsumerState<SignupTab> {
                         _selectedDateOfBirth == null
                             ? 'Select Date of Birth'
                             : '${_selectedDateOfBirth!.day}/${_selectedDateOfBirth!.month}/${_selectedDateOfBirth!.year}',
-                        style: AppText.bodyLarge.copyWith(
+                        style: AppTypography.bodyLarge.copyWith(
                           color: _selectedDateOfBirth == null
                               ? AppColors.textMuted
                               : AppColors.textPrimary,
@@ -354,7 +355,7 @@ class _SignupTabState extends ConsumerState<SignupTab> {
             // Emergency Contact
             Text(
               'Emergency Contact',
-              style: AppText.heading2,
+              style: AppTypography.heading2,
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -397,7 +398,7 @@ class _SignupTabState extends ConsumerState<SignupTab> {
                 children: [
                   Text(
                     'This PIN is your emergency trigger — memorise it',
-                    style: AppText.label.copyWith(
+                    style: AppTypography.label.copyWith(
                       color: AppColors.orange,
                       fontWeight: FontWeight.w600,
                     ),
@@ -462,7 +463,7 @@ class _SignupTabState extends ConsumerState<SignupTab> {
                     },
                     child: Text(
                       'I agree to Terms & Community Standards',
-                      style: AppText.bodySmall,
+                      style: AppTypography.bodySmall,
                     ),
                   ),
                 ),
@@ -489,7 +490,7 @@ class _SignupTabState extends ConsumerState<SignupTab> {
                     )
                   : Text(
                       'Create Account',
-                      style: AppText.bodyLarge.copyWith(
+                      style: AppTypography.bodyLarge.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),

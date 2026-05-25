@@ -1,7 +1,13 @@
 class Env {
-  static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL');
+  static const String baseUrl = String.fromEnvironment(
+    'BASE_URL',
+    defaultValue: 'http://10.0.2.2:5000',
+  );
 
-  static const String mapboxToken = String.fromEnvironment('MAPBOX_TOKEN');
+  static const String environment = String.fromEnvironment(
+    'ENV',
+    defaultValue: 'development',
+  );
 
-  static const String sentryDsn = String.fromEnvironment('SENTRY_DSN');
+  static bool get isProduction => environment == 'production';
 }

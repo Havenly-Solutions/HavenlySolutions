@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:bcrypt/bcrypt.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/security/secure_storage_service.dart';
@@ -60,8 +61,8 @@ class _PINCreationScreenState extends State<PINCreationScreen> {
   }
 
   Future<void> _savePin() async {
-    // In a real app, we'd hash it and send to backend
-    // For now, we'll mark as set
+    final hash = BCrypt.hashpw(_pin, BCrypt.gensalt(logRounds: 10));
+    await SecureStorageService.savePinHash(hash);
     await SecureStorageService.setPinSet(true);
     if (mounted) {
       context.go('/onboarding');
@@ -107,7 +108,7 @@ class _PINCreationScreenState extends State<PINCreationScreen> {
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isFilled ? AppColors.brandDeep : Colors.grey[300],
+                    color: isFilled ? AppColors.primary : Colors.grey[300],
                   ),
                 );
               }),

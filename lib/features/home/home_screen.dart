@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers/user_provider.dart';
+import '../../core/constants/translations.dart';
 import '../../core/theme/app_typography.dart';
 import 'widgets/sos_button.dart';
 
@@ -26,7 +27,7 @@ class HomeScreen extends ConsumerWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Public Safety',
+            Text(AppTranslations.t('public_safety'),
                 style: AppTypography.heading2.copyWith(fontSize: 18)),
           ],
         ),
@@ -42,10 +43,10 @@ class HomeScreen extends ConsumerWidget {
           ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text('Good morning, $firstName',
+              Text(AppTranslations.t('good_morning', args: [firstName]),
                   style: const TextStyle(
                       fontSize: 24, fontWeight: FontWeight.w900)),
-              Text('Your patrol shift is currently active in District 4.',
+              Text(AppTranslations.t('patrol_shift_active'),
                   style: TextStyle(color: Colors.grey[600], fontSize: 13)),
               const SizedBox(height: 20),
 
@@ -58,12 +59,13 @@ class HomeScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Recent Alerts', style: AppTypography.heading2),
+                  Text(AppTranslations.t('recent_alerts'),
+                      style: AppTypography.heading2),
                   TextButton(
                       onPressed: () {},
-                      child: const Text('View Dispatch',
-                          style:
-                              TextStyle(color: Colors.blueGrey, fontSize: 12))),
+                      child: Text(AppTranslations.t('view_dispatch'),
+                          style: const TextStyle(
+                              color: Colors.blueGrey, fontSize: 12))),
                 ],
               ),
               const SizedBox(height: 12),
@@ -71,20 +73,21 @@ class HomeScreen extends ConsumerWidget {
                   Icons.error_outline,
                   Colors.red[100]!,
                   Colors.red[800]!,
-                  'Vehicle Theft in Progress',
-                  'Oak Street & 5th Avenue • Dispatch ID #8812',
-                  '2m ago'),
+                  AppTranslations.t('vehicle_theft_in_progress'),
+                  AppTranslations.t('oak_street_dispatch'),
+                  AppTranslations.t('minutes_ago', args: ['2'])),
               _buildAlertItem(
                   null,
                   Colors.orange[100]!,
                   Colors.orange[800]!,
-                  'Medical Assistance Needed',
-                  'Central Plaza Park • Dispatch ID #8809',
-                  '14m ago',
+                  AppTranslations.t('medical_assistance_needed'),
+                  AppTranslations.t('central_plaza_dispatch'),
+                  AppTranslations.t('minutes_ago', args: ['14']),
                   logo: true),
 
               const SizedBox(height: 24),
-              Text('Quick Actions', style: AppTypography.heading2),
+              Text(AppTranslations.t('quick_actions'),
+                  style: AppTypography.heading2),
               const SizedBox(height: 16),
               _buildQuickActionsGrid(context),
 
@@ -121,15 +124,15 @@ class HomeScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('ACTIVE ALERTS',
-                      style: TextStyle(
+                  Text(AppTranslations.t('active_alerts'),
+                      style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: Colors.grey)),
-                  Text('04',
+                  const Text('04',
                       style:
                           TextStyle(fontSize: 40, fontWeight: FontWeight.w900)),
                 ],
@@ -147,9 +150,11 @@ class HomeScreen extends ConsumerWidget {
           const Divider(height: 32),
           Row(
             children: [
-              _buildStatDetail('PATROL TIME', '05h 12m'),
+              _buildStatDetail(AppTranslations.t('patrol_time'), '05h 12m'),
               const Spacer(),
-              _buildStatDetail('AREA STATUS', 'High Alert', isAlert: true),
+              _buildStatDetail(AppTranslations.t('area_status'),
+                  AppTranslations.t('high_alert'),
+                  isAlert: true),
             ],
           ),
         ],
@@ -191,17 +196,17 @@ class HomeScreen extends ConsumerWidget {
               colors: [Colors.transparent, Colors.black.withOpacity(0.8)]),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('CURRENT SECTOR',
-                style: TextStyle(
+            Text(AppTranslations.t('current_sector'),
+                style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 10,
                     fontWeight: FontWeight.bold)),
-            Text('North Downtown Transit',
-                style: TextStyle(
+            Text(AppTranslations.t('north_downtown_transit'),
+                style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.bold)),
@@ -267,10 +272,12 @@ class HomeScreen extends ConsumerWidget {
       mainAxisSpacing: 12,
       childAspectRatio: 1.6,
       children: [
-        _buildActionCard(Icons.edit_document, 'New Report', () {}),
-        _buildActionCard(Icons.search, 'ID Lookup', () {}),
-        _buildActionCard(Icons.radio, 'Radio Sync', () {}),
-        _buildActionCard(Icons.folder_open, 'Documents', () {}),
+        _buildActionCard(
+            Icons.edit_document, AppTranslations.t('new_report'), () {}),
+        _buildActionCard(Icons.search, AppTranslations.t('id_lookup'), () {}),
+        _buildActionCard(Icons.radio, AppTranslations.t('radio_sync'), () {}),
+        _buildActionCard(
+            Icons.folder_open, AppTranslations.t('documents'), () {}),
       ],
     );
   }

@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../config/app_config.dart';
+import '../constants/translations.dart';
 import '../models/user.dart';
 import '../security/secure_storage_service.dart';
 
@@ -8,7 +10,7 @@ class ApiService {
   final Dio _dio;
 
   // Backend base URL — configure per environment
-  static const String baseUrl = 'http://localhost:5000'; // Dev
+  static final String baseUrl = AppConfig.baseUrl;
 
   ApiService({Dio? dio}) : _dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl)) {
     _setupInterceptors();
@@ -23,6 +25,7 @@ class ApiService {
             options.headers['Authorization'] = 'Bearer $token';
           }
           options.headers['Content-Type'] = 'application/json';
+          options.headers['Accept-Language'] = AppTranslations.currentLanguage;
           return handler.next(options);
         },
         onError: (error, handler) {
@@ -40,6 +43,8 @@ class ApiService {
     required String password,
     required String idNumber,
     required DateTime dateOfBirth,
+    required String address,
+    required String postalCode,
     required String emergencyContactName,
     required String emergencyContactPhone,
     required String sosPin,
@@ -54,6 +59,8 @@ class ApiService {
           'password': password,
           'idNumber': idNumber,
           'dateOfBirth': dateOfBirth.toIso8601String(),
+          'address': address,
+          'postalCode': postalCode,
           'emergencyContactName': emergencyContactName,
           'emergencyContactPhone': emergencyContactPhone,
           'sosPin': sosPin,
@@ -171,7 +178,8 @@ class ApiService {
 
   Future<void> setPin({required String sosPin}) async {
     try {
-      final response = await _dio.post('/api/users/pin', data: {'sosPin': sosPin});
+      final response =
+          await _dio.post('/api/users/pin', data: {'sosPin': sosPin});
       if (response.statusCode == 200 || response.statusCode == 201) {
         return;
       } else {
@@ -188,7 +196,8 @@ class ApiService {
 
   Future<AuthResponse> pinLogin({required String sosPin}) async {
     try {
-      final response = await _dio.post('/api/auth/pin-login', data: {'sosPin': sosPin});
+      final response =
+          await _dio.post('/api/auth/pin-login', data: {'sosPin': sosPin});
       if (response.statusCode == 200) {
         final authResponse = AuthResponse.fromJson(response.data);
         await SecureStorageService.saveTokens(
