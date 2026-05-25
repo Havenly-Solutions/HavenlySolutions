@@ -139,7 +139,6 @@ class AppTranslations {
       'gender_female': 'Female',
       'gender_other': 'Other',
       'gender_prefer_not_to_say': 'Prefer not to say',
-      'retry': 'Retry',
       'error_password_length': 'At least 8 characters',
       'error_4_digits_required': '4 digits required',
       'error_numbers_only': 'Numbers only',
@@ -252,7 +251,6 @@ class AppTranslations {
       'silver_alert_title': 'SILVER ALERT: James Peterson',
       'silver_alert_body':
           'Last seen near the North Precinct Central Park at 4:30 PM. Wearing a tan windbreaker...',
-      'age': 'Age',
       'years': 'years',
       'location': 'Location',
       'central_district': 'Central District',
@@ -428,7 +426,6 @@ class AppTranslations {
       'gender_female': 'Owesifazane',
       'gender_other': 'Okunye',
       'gender_prefer_not_to_say': 'Ngifuna ukungasho',
-      'retry': 'Zama futhi',
       'error_password_length': 'Okungenani izinhlamvu eziyi-8',
       'error_4_digits_required': 'Kudingeka amadijithi ayi-4',
       'error_numbers_only': 'Kufanele kube izinombolo kuphela',

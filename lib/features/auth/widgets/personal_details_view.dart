@@ -165,8 +165,8 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
-                    AppTranslations.t('first_name'),
-                    AppTranslations.t('enter_first_name'),
+                    AppTranslations.t('first name'),
+                    AppTranslations.t('enter name'),
                     controller: _firstNameController,
                     validator: (value) => value?.trim().isEmpty ?? true
                         ? AppTranslations.t('error_required')
@@ -175,7 +175,7 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
                   const SizedBox(height: 16),
                   _buildTextField(
                     AppTranslations.t('surname'),
-                    AppTranslations.t('enter_surname'),
+                    AppTranslations.t('enter surname'),
                     controller: _surnameController,
                     validator: (value) => value?.trim().isEmpty ?? true
                         ? AppTranslations.t('error_required')
