@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/chat_message.dart';
 import '../services/api_service.dart';
-import 'user_provider.dart';
 
 class ChatState {
   final List<ChatThread> threads;

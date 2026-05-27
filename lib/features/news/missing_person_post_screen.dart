@@ -11,10 +11,12 @@ class MissingPersonPostScreen extends ConsumerStatefulWidget {
   const MissingPersonPostScreen({super.key});
 
   @override
-  ConsumerState<MissingPersonPostScreen> createState() => _MissingPersonPostScreenState();
+  ConsumerState<MissingPersonPostScreen> createState() =>
+      _MissingPersonPostScreenState();
 }
 
-class _MissingPersonPostScreenState extends ConsumerState<MissingPersonPostScreen> {
+class _MissingPersonPostScreenState
+    extends ConsumerState<MissingPersonPostScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
@@ -22,7 +24,7 @@ class _MissingPersonPostScreenState extends ConsumerState<MissingPersonPostScree
   final _contactNameController = TextEditingController();
   final _contactPhoneController = TextEditingController();
   final _detailsController = TextEditingController();
-  
+
   String _gender = 'Male';
   XFile? _image;
   bool _isLoading = false;
@@ -39,7 +41,8 @@ class _MissingPersonPostScreenState extends ConsumerState<MissingPersonPostScree
     if (!_formKey.currentState!.validate()) return;
     if (_image == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload a photo of the missing person.')),
+        const SnackBar(
+            content: Text('Please upload a photo of the missing person.')),
       );
       return;
     }
@@ -68,7 +71,8 @@ class _MissingPersonPostScreenState extends ConsumerState<MissingPersonPostScree
       if (mounted) {
         context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Missing person report published successfully.')),
+          const SnackBar(
+              content: Text('Missing person report published successfully.')),
         );
       }
     } catch (e) {
@@ -96,7 +100,10 @@ class _MissingPersonPostScreenState extends ConsumerState<MissingPersonPostScree
           children: [
             const Text(
               'PHOTO OF MISSING PERSON',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey),
             ),
             const SizedBox(height: 12),
             GestureDetector(
@@ -111,14 +118,17 @@ class _MissingPersonPostScreenState extends ConsumerState<MissingPersonPostScree
                 child: _image != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Image.file(File(_image!.path), fit: BoxFit.cover),
+                        child:
+                            Image.file(File(_image!.path), fit: BoxFit.cover),
                       )
                     : const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_a_photo_outlined, size: 48, color: Colors.grey),
+                          Icon(Icons.add_a_photo_outlined,
+                              size: 48, color: Colors.grey),
                           SizedBox(height: 12),
-                          Text('Upload Photo', style: TextStyle(color: Colors.grey)),
+                          Text('Upload Photo',
+                              style: TextStyle(color: Colors.grey)),
                         ],
                       ),
               ),
@@ -128,22 +138,31 @@ class _MissingPersonPostScreenState extends ConsumerState<MissingPersonPostScree
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildTextField('AGE', _ageController, 'Years', keyboardType: TextInputType.number)),
+                Expanded(
+                    child: _buildTextField('AGE', _ageController, 'Years',
+                        keyboardType: TextInputType.number)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('GENDER', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      const Text('GENDER',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey)),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _gender,
+                        initialValue: _gender,
                         decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
                         ),
                         items: ['Male', 'Female', 'Other'].map((String val) {
-                          return DropdownMenuItem<String>(value: val, child: Text(val));
+                          return DropdownMenuItem<String>(
+                              value: val, child: Text(val));
                         }).toList(),
                         onChanged: (val) => setState(() => _gender = val!),
                       ),
@@ -153,28 +172,35 @@ class _MissingPersonPostScreenState extends ConsumerState<MissingPersonPostScree
               ],
             ),
             const SizedBox(height: 16),
-            _buildTextField('LAST SEEN LOCATION', _lastSeenController, 'Area or Street'),
+            _buildTextField(
+                'LAST SEEN LOCATION', _lastSeenController, 'Area or Street'),
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 24),
-            const Text('CONTACT FOR TIPS', style: AppTypography.heading2),
+            Text('CONTACT FOR TIPS', style: AppTypography.heading2),
             const SizedBox(height: 16),
             _buildTextField('CONTACT NAME', _contactNameController, 'Name'),
             const SizedBox(height: 16),
-            _buildTextField('CONTACT PHONE', _contactPhoneController, '+27...', keyboardType: TextInputType.phone),
+            _buildTextField('CONTACT PHONE', _contactPhoneController, '+27...',
+                keyboardType: TextInputType.phone),
             const SizedBox(height: 24),
-            _buildTextField('ADDITIONAL DETAILS', _detailsController, 'Clothing, identifying marks...', maxLines: 3),
+            _buildTextField('ADDITIONAL DETAILS', _detailsController,
+                'Clothing, identifying marks...',
+                maxLines: 3),
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: _isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Publish Alert', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  : const Text('Publish Alert',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 40),
           ],
@@ -183,11 +209,15 @@ class _MissingPersonPostScreenState extends ConsumerState<MissingPersonPostScree
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String hint, {TextInputType? keyboardType, int maxLines = 1}) {
+  Widget _buildTextField(
+      String label, TextEditingController controller, String hint,
+      {TextInputType? keyboardType, int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -195,7 +225,8 @@ class _MissingPersonPostScreenState extends ConsumerState<MissingPersonPostScree
           maxLines: maxLines,
           decoration: InputDecoration(
             hintText: hint,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           validator: (val) => val!.isEmpty ? 'Required' : null,

@@ -26,6 +26,7 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _postalCodeController = TextEditingController();
+  final TextEditingController _provinceController = TextEditingController();
   final TextEditingController _communityController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
 
@@ -94,6 +95,9 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
         email: _emailController.text.trim(),
         address: _addressController.text.trim(),
         postalCode: _postalCodeController.text.trim(),
+        province: _provinceController.text.trim().isEmpty
+            ? 'Gauteng'
+            : _provinceController.text.trim(),
         community: _communityController.text.trim(),
       );
       widget.onContinue(signupData);
@@ -111,6 +115,7 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
     _emailController.dispose();
     _addressController.dispose();
     _postalCodeController.dispose();
+    _provinceController.dispose();
     _communityController.dispose();
     _dobController.dispose();
     super.dispose();
@@ -125,7 +130,7 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppTranslations.t('step_1_of_2'),
+            Text(AppTranslations.t('step 1 of 2'),
                 style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -251,8 +256,9 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (value?.trim().isEmpty ?? true)
+                      if (value?.trim().isEmpty ?? true) {
                         return AppTranslations.t('error_required');
+                      }
                       if (!RegExp(r'^\S+@\S+\.\S+$').hasMatch(value!.trim())) {
                         return AppTranslations.t('error_invalid_email');
                       }
@@ -270,7 +276,7 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
-                    AppTranslations.t('postal_code'),
+                    AppTranslations.t('postal code'),
                     AppTranslations.t('enter_postal_code'),
                     controller: _postalCodeController,
                     keyboardType: TextInputType.number,
@@ -279,9 +285,32 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
                         : null,
                   ),
                   const SizedBox(height: 16),
+                  _buildDropdown(
+                    'Province',
+                    'Select Province',
+                    [
+                      'Eastern Cape',
+                      'Free State',
+                      'Gauteng',
+                      'KwaZulu-Natal',
+                      'Limpopo',
+                      'Mpumalanga',
+                      'Northern Cape',
+                      'North West',
+                      'Western Cape'
+                    ],
+                    _provinceController.text.isEmpty
+                        ? null
+                        : _provinceController.text,
+                    (val) => setState(() => _provinceController.text = val!),
+                    validator: (value) => value == null
+                        ? AppTranslations.t('error_required')
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
                   _buildTextField(
-                    AppTranslations.t('community'),
-                    AppTranslations.t('search_community'),
+                    AppTranslations.t('Community'),
+                    AppTranslations.t('search community'),
                     controller: _communityController,
                     icon: Icons.location_on_outlined,
                     validator: (value) => value?.trim().isEmpty ?? true
@@ -300,7 +329,7 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(AppTranslations.t('continue_to_identity_scan'),
+                        Text(AppTranslations.t('continue to identity scan'),
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold)),
@@ -394,7 +423,7 @@ class _PersonalDetailsViewState extends State<PersonalDetailsView> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButtonFormField<String>(
-              value: value,
+              initialValue: value,
               hint: Text(hint,
                   style: const TextStyle(color: Colors.grey, fontSize: 13)),
               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),

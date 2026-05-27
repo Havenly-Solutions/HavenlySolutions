@@ -8,17 +8,57 @@ import '../../features/auth/auth_screen.dart';
 import '../../features/auth/models/signup_data.dart';
 import '../../features/auth/signup_screen.dart';
 import '../../features/auth/login_screen.dart';
-import '../../features/auth/biometric_setup_screen.dart';
+import '../../features/auth/biometric_scan_screen.dart';
 import '../../features/pin/pin_creation_screen.dart';
 import '../../features/pin/pin_login_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/onboarding/guided_tour_screen.dart';
 import '../../features/home/main_navigation_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/profile/edit_profile_screen.dart';
+import '../../features/profile/pin_management_screen.dart';
+import '../../features/news/missing_person_post_screen.dart';
+import '../../features/guest/guest_portal_screen.dart';
+import '../../features/guest/guest_sos_screen.dart';
+import '../../features/auth/guest_auth_screen.dart';
+import '../providers/auth_state_provider.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
+
   return GoRouter(
     initialLocation: '/',
+    redirect: (context, state) {
+      // Allow specific critical paths during guest/unauthenticated state
+      if (state.matchedLocation == '/' ||
+          state.matchedLocation == '/language' ||
+          state.matchedLocation == '/onboarding' ||
+          state.matchedLocation == '/auth' ||
+          state.matchedLocation == '/signup' ||
+          state.matchedLocation == '/login') {
+        return null;
+      }
+
+      // Handle guest route redirects
+      if (authState == AuthState.guest) {
+        // Guest user can see home/feed but not private sections
+        if (state.matchedLocation == '/profile' ||
+            state.matchedLocation == '/pin-setup' ||
+            state.matchedLocation == '/account-creation') {
+          return '/guest';
+        }
+      }
+
+      // Registered user shouldn't see guest portal
+      if (authState == AuthState.authenticated) {
+        if (state.matchedLocation == '/guest' ||
+            state.matchedLocation == '/guest/sos') {
+          return '/home';
+        }
+      }
+
+      return null; // No redirect
+    },
     routes: [
       GoRoute(
         path: '/',
@@ -41,14 +81,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
+        path: '/guest-auth',
+        name: 'guestAuth',
+        builder: (context, state) => const GuestAuthScreen(),
+      ),
+      GoRoute(
         path: '/signup',
         name: 'signup',
         builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
-        path: '/biometric-setup',
-        name: 'biometricSetup',
-        builder: (context, state) => const BiometricSetupScreen(),
+        path: '/biometric-scan',
+        name: 'biometricScan',
+        builder: (context, state) => const BiometricScanScreen(),
       ),
       GoRoute(
         path: '/account-creation',
@@ -60,13 +105,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/pin-login',
-        name: 'pinLogin',
+        path: '/pin-entry',
+        name: 'pinEntry',
         builder: (context, state) => const PINLoginScreen(),
       ),
       GoRoute(
-        path: '/pin-creation',
-        name: 'pinCreation',
+        path: '/pin-setup',
+        name: 'pinSetup',
         builder: (context, state) => const PINCreationScreen(),
       ),
       GoRoute(
@@ -96,6 +141,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/profile',
         name: 'profile',
         builder: (context, state) => const ProfileScreen(),
+        routes: [
+          GoRoute(
+            path: 'edit',
+            name: 'editProfile',
+            builder: (context, state) => const EditProfileScreen(),
+          ),
+          GoRoute(
+            path: 'pin',
+            name: 'pinManagement',
+            builder: (context, state) => const PINManagementScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/feed/missing-person/post',
+        name: 'missingPersonPost',
+        builder: (context, state) => const MissingPersonPostScreen(),
+      ),
+      // Guest routes
+      GoRoute(
+        path: '/guest',
+        name: 'guestPortal',
+        builder: (context, state) => const GuestPortalScreen(),
+      ),
+      GoRoute(
+        path: '/guest/sos',
+        name: 'guestSos',
+        builder: (context, state) => const GuestSosScreen(),
       ),
     ],
   );

@@ -54,7 +54,8 @@ class ProfileScreen extends ConsumerWidget {
               icon: Icons.lock_outline,
               title: 'Security Settings',
               items: [
-                _buildActionRow('Password & Authentication'),
+                _buildActionRow('Password & Authentication', 
+                    onTap: () => context.push('/profile/pin')),
                 _buildActionRow('Two-Factor Setup', badge: true),
                 _buildActionRow('Active Sessions'),
               ],
@@ -133,10 +134,11 @@ class ProfileScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildStatusBadge(null, 'Protected', const Color(0xFF2D4F4F),
-                  logo: true),
+              _buildStatusBadge(null, user?.status == 'ACTIVE' ? 'Protected' : 'Inactive', 
+                  user?.status == 'ACTIVE' ? const Color(0xFF2D4F4F) : Colors.grey,
+                  logo: user?.status == 'ACTIVE'),
               const SizedBox(width: 8),
-              _buildStatusBadge(null, 'Premium Plan', Colors.grey[200]!,
+              _buildStatusBadge(null, '${user?.tier ?? 'FREE'} Plan', Colors.grey[200]!,
                   textColor: Colors.black87),
             ],
           ),

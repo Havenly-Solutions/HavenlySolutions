@@ -10,7 +10,6 @@
  */
 
 import 'dart:convert';
-
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -29,7 +28,7 @@ class LocalDb {
     final path = join(dir.path, 'havenly_solutions.db');
     return openDatabase(
       path,
-      version: 11,
+      version: 12,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -79,6 +78,18 @@ class LocalDb {
         radius_km REAL NOT NULL,
         leader_user_id TEXT,
         created_at INTEGER NOT NULL
+      )
+    ''');
+
+    // ── CONTACTS (Phase 12 Discovery) ──────────────────────────
+    await db.execute('''
+      CREATE TABLE contacts (
+        id TEXT PRIMARY KEY,
+        phone_hash TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        is_havenly_user INTEGER NOT NULL DEFAULT 0,
+        havenly_user_id TEXT,
+        last_synced INTEGER
       )
     ''');
 
@@ -322,6 +333,19 @@ class LocalDb {
         )
       ''').catchError((_) {});
     }
+
+    if (oldVersion < 12) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS contacts (
+          id TEXT PRIMARY KEY,
+          phone_hash TEXT NOT NULL,
+          display_name TEXT NOT NULL,
+          is_havenly_user INTEGER NOT NULL DEFAULT 0,
+          havenly_user_id TEXT,
+          last_synced INTEGER
+        )
+      ''').catchError((_) {});
+    }
   }
 
   // ── COMMUNITIES SEED DATA ───────────────────────────────────
@@ -371,6 +395,7 @@ class LocalDb {
     await database.delete('cases');
     await database.delete('community_alerts');
     await database.delete('bookmarks');
+    await database.delete('contacts');
   }
 
   static Future<void> resetForFreshUser() async {
@@ -409,6 +434,19 @@ class LocalDb {
       where: 'id = ?',
       whereArgs: [userId],
     );
+  }
+
+  // ── CONTACTS ───────────────────────────────────────────────
+
+  static Future<void> upsertContact(Map<String, dynamic> contact) async {
+    final database = await db;
+    await database.insert('contacts', contact,
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  static Future<List<Map<String, dynamic>>> getContacts() async {
+    final database = await db;
+    return database.query('contacts', orderBy: 'display_name');
   }
 
   // ── EMERGENCY CONTACTS ──────────────────────────────────────
@@ -580,6 +618,16 @@ class LocalDb {
     final database = await db;
     await database.insert('messages', message,
         conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  static Future<void> updateMessageSyncStatus(String id, int synced) async {
+    final database = await db;
+    await database.update(
+      'messages',
+      {'synced': synced},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   static Future<List<Map<String, dynamic>>> getMessages(

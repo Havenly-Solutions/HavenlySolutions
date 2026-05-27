@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:go_router/go_router.dart';
@@ -253,7 +255,3 @@ class _BiometricScanScreenState extends State<BiometricScanScreen> {
     );
   }
 }
-
-// Helper for Android plane concatenation
-import 'dart:io';
-import 'package:flutter/foundation.dart';

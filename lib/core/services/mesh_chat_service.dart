@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'package:uuid/uuid.dart';
-import '../models/chat_message.dart';
 import '../models/mesh_packet.dart';
 import '../database/local_db.dart';
 import 'bluetooth_mesh_service.dart';
 import 'connectivity_service.dart';
-import 'api_service.dart';
 import '../security/secure_storage_service.dart';
 
 class MeshChatService {
@@ -20,7 +18,7 @@ class MeshChatService {
     required String content,
   }) async {
     final currentUserId = await SecureStorageService.getUserId() ?? 'unknown';
-    
+
     final msgId = const Uuid().v4();
     final now = DateTime.now();
 

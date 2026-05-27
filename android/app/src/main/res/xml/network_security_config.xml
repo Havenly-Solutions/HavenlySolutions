@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-  <!-- Only trust our specific backend domain. Prevents MITM attacks. -->
-  <!-- Phase 21 adds certificate pinning hashes here. -->
-  <domain-config cleartextTrafficPermitted="false">
-    <domain includeSubdomains="true">havenly.solutions</domain>
+  <base-config cleartextTrafficPermitted="true">
     <trust-anchors>
       <certificates src="system" />
     </trust-anchors>
+  </base-config>
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="true">10.0.2.2</domain>
+    <domain includeSubdomains="true">10.0.0.171</domain>
+    <domain includeSubdomains="true">localhost</domain>
   </domain-config>
 </network-security-config>

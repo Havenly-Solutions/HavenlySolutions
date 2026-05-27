@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers/user_provider.dart';
+import '../../core/services/sos_orchestrator.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
@@ -16,8 +18,10 @@ class _PINLoginScreenState extends ConsumerState<PINLoginScreen> {
   String _pin = '';
   int _attempts = 0;
   bool _isLoading = false;
+  bool _isLocked = false;
 
   void _onNumberTap(String value) {
+    if (_isLocked) return;
     if (_pin.length < 4) {
       setState(() {
         _pin += value;
@@ -30,6 +34,7 @@ class _PINLoginScreenState extends ConsumerState<PINLoginScreen> {
   }
 
   void _onBackspace() {
+    if (_isLocked) return;
     if (_pin.isNotEmpty) {
       setState(() {
         _pin = _pin.substring(0, _pin.length - 1);
@@ -39,8 +44,20 @@ class _PINLoginScreenState extends ConsumerState<PINLoginScreen> {
 
   Future<void> _loginWithPin() async {
     setState(() => _isLoading = true);
+    final enteredPin = _pin;
+    
     try {
-      await ref.read(userProvider.notifier).pinLogin(_pin);
+      // Check for Duress PIN (mocked for now, should be in secure storage)
+      // Section 16: Duress PIN configured by user
+      const duressPin = '9999'; // Example
+      if (enteredPin == duressPin) {
+        unawaited(SosOrchestrator.trigger(threatSource: 'duress_pin'));
+        // App behaves normally
+        context.go('/home');
+        return;
+      }
+
+      await ref.read(userProvider.notifier).pinLogin(enteredPin);
       if (mounted) {
         context.go('/home');
       }
@@ -67,13 +84,16 @@ class _PINLoginScreenState extends ConsumerState<PINLoginScreen> {
   }
 
   void _triggerSilentSOS() {
-    // Logic for silent SOS
-    // Screen shows nothing, dispatches in background
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content: Text('Security threshold reached. Silent SOS activated.')),
-    );
-    // In a real app, this would be much more discreet
+    setState(() {
+      _isLocked = true;
+    });
+
+    // Section 16: Silent SOS fires without alerting the user
+    // trigger_method = 'pin_fail'
+    unawaited(SosOrchestrator.trigger(threatSource: 'pin_fail'));
+
+    // Show account locked UI — looks like a normal error
+    // (In a real app, this would probably prevent further login for X minutes)
   }
 
   @override
@@ -81,13 +101,17 @@ class _PINLoginScreenState extends ConsumerState<PINLoginScreen> {
     final user = ref.watch(userProvider);
     final firstName = user?.fullName.split(' ').first ?? 'User';
 
+    if (_isLocked) {
+      return _buildLockedState();
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 40),
-            Image.asset('assets/images/logo.png', width: 80),
+            Image.asset('assets/images/logo.png', width: 80, errorBuilder: (_,__,___) => const Icon(Icons.shield, size: 80, color: AppColors.primary)),
             const SizedBox(height: 32),
             Text(
               'Welcome Back, $firstName',
@@ -136,6 +160,43 @@ class _PINLoginScreenState extends ConsumerState<PINLoginScreen> {
             else
               _buildKeypad(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockedState() {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_outline_rounded, size: 80, color: AppColors.danger),
+              const SizedBox(height: 32),
+              const Text(
+                'Account Locked',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Too many failed attempts. For your security, this account has been temporarily locked. Please try again in 30 minutes.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, height: 1.5),
+              ),
+              const SizedBox(height: 48),
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: () => context.go('/auth'),
+                  child: const Text('Return to Login'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

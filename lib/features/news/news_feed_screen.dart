@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/constants/translations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import 'widgets/missing_person_card.dart';
+import '../../core/models/feed_post.dart';
 
 class NewsFeedScreen extends ConsumerStatefulWidget {
   const NewsFeedScreen({super.key});
@@ -37,9 +40,9 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppTranslations.t('public_safety'),
+            Text(AppTranslations.t('public safety'),
                 style: AppTypography.heading2.copyWith(fontSize: 18)),
-            Text(AppTranslations.t('precinct_central'),
+            Text(AppTranslations.t('precinct central'),
                 style: AppTypography.label
                     .copyWith(color: AppColors.textSecondary)),
           ],
@@ -51,28 +54,12 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
             onPressed: () {},
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              indicatorColor: Colors.transparent,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-              tabs: [
-                _buildTab(AppTranslations.t('all_alerts'), true),
-                _buildTab(AppTranslations.t('missing_persons'), false),
-                _buildTab(AppTranslations.t('security_concerns'), false),
-                _buildTab(AppTranslations.t('weather'), false),
-              ],
-            ),
-          ),
-        ),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16),
         children: [
+          _buildMissingPersonsAlbum(),
+          const SizedBox(height: 16),
           _buildPostAlertButton(),
           const SizedBox(height: 16),
           _buildSilverAlert(),
@@ -88,21 +75,55 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
     );
   }
 
-  Widget _buildTab(String label, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.black : Colors.grey[200],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : Colors.black87,
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
+  Widget _buildMissingPersonsAlbum() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'MISSING PERSONS',
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: const Text('View All',
+                    style: TextStyle(fontSize: 12, color: AppColors.primary)),
+              ),
+            ],
+          ),
         ),
-      ),
+        SizedBox(
+          height: 160,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            scrollDirection: Axis.horizontal,
+            itemCount: 5,
+            itemBuilder: (context, index) {
+              return MissingPersonCard(
+                post: FeedPost(
+                  id: 'mp_$index',
+                  authorId: 'system',
+                  authorName: 'SAPS',
+                  body: 'Missing since yesterday',
+                  type: PostType.missingPerson,
+                  createdAt: DateTime.now(),
+                  mpName: index == 0 ? 'Thabo Mbeki' : 'Person $index',
+                  mpStatus:
+                      index == 1 ? MissingStatus.FOUND : MissingStatus.MISSING,
+                  images: const ['https://via.placeholder.com/150'],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -110,7 +131,7 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: ElevatedButton.icon(
-        onPressed: () {},
+        onPressed: () => context.push('/feed/missing-person/post'),
         icon: const Icon(Icons.post_add),
         label: Text(AppTranslations.t('post_alert')),
         style: ElevatedButton.styleFrom(
@@ -141,8 +162,12 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
               ClipRRect(
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.asset('assets/images/stay_safe.png',
-                    height: 200, width: double.infinity, fit: BoxFit.cover),
+                child: Container(
+                  height: 200,
+                  width: double.infinity,
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.image, size: 40, color: Colors.grey),
+                ),
               ),
               Positioned(
                 top: 12,
@@ -153,12 +178,11 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
                   decoration: BoxDecoration(
                       color: Colors.red[800],
                       borderRadius: BorderRadius.circular(20)),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      const Icon(Icons.error_outline,
-                          color: Colors.white, size: 14),
-                      const SizedBox(width: 4),
-                      Text(AppTranslations.t('urgent_alert'),
+                      Icon(Icons.error_outline, color: Colors.white, size: 14),
+                      SizedBox(width: 4),
+                      Text('URGENT ALERT',
                           style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -178,53 +202,37 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text(AppTranslations.t('silver_alert_title'),
+                      child: Text('Missing Senior Alert',
                           style: AppTypography.heading2.copyWith(fontSize: 18)),
                     ),
-                    Text(AppTranslations.t('two_hours_ago'),
-                        style: AppTypography.label),
+                    Text('2h ago', style: AppTypography.label),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppTranslations.t('silver_alert_body'),
+                  'A 68-year-old male was last seen near the central station wearing a blue jacket.',
                   style: AppTypography.bodySmall,
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _buildInfoBadge(AppTranslations.t('age'),
-                        '68 ' + AppTranslations.t('years')),
+                    _buildInfoBadge('Age', '68'),
                     const SizedBox(width: 12),
-                    _buildInfoBadge(AppTranslations.t('location'),
-                        AppTranslations.t('central_district')),
+                    _buildInfoBadge('Location', 'Central'),
                   ],
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.phone),
-                        label: Text(AppTranslations.t('contact_authorities')),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.share_outlined, size: 20),
-                    ),
-                  ],
+                ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.phone),
+                  label: const Text('Contact Authorities'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 44),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
                 ),
               ],
             ),
@@ -275,17 +283,17 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
                 decoration: BoxDecoration(
                     color: Colors.blue[50],
                     borderRadius: BorderRadius.circular(8)),
-                child: Image.asset('assets/images/logo.png',
-                    width: 20, height: 20),
+                child: const Icon(Icons.report_problem_outlined,
+                    color: Colors.blue),
               ),
               const SizedBox(width: 12),
-              Column(
+              const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Suspicious Activity Report',
+                  Text('Suspicious Activity Report',
                       style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('Oakwood Residential Area • 45m ago',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 11)),
+                  Text('Oakwood Area • 45m ago',
+                      style: TextStyle(color: Colors.grey, fontSize: 11)),
                 ],
               ),
             ],
@@ -293,12 +301,6 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
           const SizedBox(height: 12),
           const Text(
               'Residents reported an unidentified white van circulating the cul-de-sac multiple times this morning.'),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset('assets/images/stay_safe.png',
-                height: 150, width: double.infinity, fit: BoxFit.cover),
-          ),
         ],
       ),
     );
@@ -319,16 +321,15 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
                   fontWeight: FontWeight.bold,
                   color: Colors.grey)),
           const SizedBox(height: 8),
-          Row(
+          const Row(
             children: [
-              const Text('94',
+              Text('94',
                   style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
-              const Text(' /100',
-                  style: TextStyle(fontSize: 14, color: Colors.grey)),
-              const Spacer(),
-              Text('+4% improvement from last month',
+              Text(' /100', style: TextStyle(fontSize: 14, color: Colors.grey)),
+              Spacer(),
+              Text('+4% this month',
                   style: TextStyle(
-                      color: Colors.green[700],
+                      color: Colors.green,
                       fontSize: 11,
                       fontWeight: FontWeight.bold)),
             ],
@@ -373,30 +374,24 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen>
           color: Colors.orange[50],
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.orange[100]!)),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.cloud_outlined, color: Colors.orange),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                    color: Colors.orange[100],
-                    borderRadius: BorderRadius.circular(4)),
-                child: const Text('CAUTION',
-                    style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange)),
-              ),
+              Icon(Icons.cloud_outlined, color: Colors.orange),
+              Spacer(),
+              Text('CAUTION',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange)),
             ],
           ),
-          const SizedBox(height: 8),
-          const Text('Severe Weather Warning',
+          SizedBox(height: 8),
+          Text('Severe Weather Warning',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const Text(
+          Text(
               'High winds and potential flooding expected near coastal areas after 8:00 PM tonight.',
               style: TextStyle(fontSize: 13, color: Colors.black54)),
         ],

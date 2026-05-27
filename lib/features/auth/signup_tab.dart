@@ -134,6 +134,8 @@ class _SignupTabState extends ConsumerState<SignupTab> {
         password: _passwordController.text,
         idNumber: _idNumberController.text.trim(),
         dateOfBirth: _selectedDateOfBirth!,
+        address: 'N/A', // Placeholder for this tab
+        postalCode: '0000', // Placeholder
         emergencyContactName: _emergencyContactNameController.text.trim(),
         emergencyContactPhone: _emergencyContactPhoneController.text.trim(),
         sosPin: _sosPinController.text,

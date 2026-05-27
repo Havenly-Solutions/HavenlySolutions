@@ -1,10 +1,6 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:camera/camera.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
-import 'package:image/image.dart' as img;
 import 'package:crypto/crypto.dart';
-import 'dart:convert';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 

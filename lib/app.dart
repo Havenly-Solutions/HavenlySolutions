@@ -17,7 +17,7 @@ class HavenlyApp extends ConsumerWidget {
 
     // Listen to connectivity changes and sync pending requests
     ref.listen(connectivityProvider, (_, connectivityStatus) {
-      if (connectivityStatus == ConnectivityStatus.online) {
+      if (connectivityStatus.value == ConnectivityStatus.online) {
         OfflineSyncService.instance.syncPendingRequests();
       }
     });

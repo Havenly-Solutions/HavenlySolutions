@@ -42,6 +42,8 @@ import 'package:uuid/uuid.dart';
 import 'package:vibration/vibration.dart';
 import '../database/local_db.dart';
 import '../security/secure_storage_service.dart';
+import 'api_service.dart';
+import 'offline_sync_service.dart';
 import 'location_service.dart';
 import 'cell_tower_service.dart';
 import 'bluetooth_mesh_service.dart';
@@ -92,49 +94,47 @@ class SosOrchestrator {
       'threat_source': threatSource,
     });
 
-    debugPrint('[SOS] Event $eventId created — firing all layers');
+    debugPrint(
+        '[SOS] Event $eventId created — starting sequential fallback chain');
 
-    // ── STEP 2: Fire all layers simultaneously ──────────────────
-    final results = await Future.wait([
-      _fireLayer1Gps(),
-      _fireLayer2CellTower(),
-      _fireLayer3Bluetooth(userId: userId, triggeredAt: triggeredAt),
-    ]);
+    // ── STEP 2: Sequential Fallback Chain ──────────────────────
+    // FIRE sequentially. Only proceed to next layer if current one fails.
 
-    final gpsResult = results[0] as GpsLayerResult;
-    final cellResult = results[1] as CellLayerResult;
-    final meshResult = results[2] as bool;
+    // Wave 1: GPS (Dependency for most alerts)
+    await _fireLayer1Gps(eventId);
 
-    // ── STEP 3: Dispatch SMS immediately ───────────────────────
-    // Runs after GPS so we can include coordinates in the message.
-    final smsResult = await SmsService.dispatch(
-      latitude: gpsResult.latitude,
-      longitude: gpsResult.longitude,
-    );
+    // Wave 4: Backend API (Primary - Richest data)
+    bool success = await _fireLayer4BackendAPI(eventId);
 
-    // ── STEP 4: Update local record with layer results ──────────
-    await LocalDb.updateSosEvent(eventId, {
-      'lat_at_trigger': gpsResult.latitude,
-      'lng_at_trigger': gpsResult.longitude,
-      'cell_mcc': cellResult.data?.mcc,
-      'cell_mnc': cellResult.data?.mnc,
-      'cell_lac': cellResult.data?.lac,
-      'cell_cid': cellResult.data?.cid,
-      'layer1_gps': gpsResult.success ? 1 : 0,
-      'layer2_cell': cellResult.success ? 1 : 0,
-      'layer3_mesh': meshResult ? 1 : 0,
-      'sms_sent': smsResult.anySucceeded ? 1 : 0,
-      'sms_contacts': smsResult.succeeded,
-    });
+    if (!success) {
+      debugPrint('[SOS] Wave 4 (API) failed. Falling back to Wave 5 (SMS).');
+      success = await _fireLayer5Sms(eventId);
+    }
 
-    // ── STEP 5: Start GPS heartbeat ─────────────────────────────
+    if (!success) {
+      debugPrint(
+          '[SOS] Wave 5 (SMS) failed. Falling back to Wave 3 (Bluetooth Mesh).');
+      success = await _fireLayer3Bluetooth(
+        userId: userId,
+        triggeredAt: triggeredAt,
+        eventId: eventId,
+      );
+    }
+
+    if (!success) {
+      debugPrint(
+          '[SOS] Wave 3 (Mesh) failed. Final fallback to Wave 2 (Cell Tower/USSD).');
+      await _fireLayer2CellTower(eventId);
+    }
+
+    // ── STEP 3: Start GPS heartbeat ─────────────────────────────
     LocationService.startHeartbeat(
       onUpdate: (lat, lng, accuracy) {
         _onHeartbeatTick(eventId: eventId, lat: lat, lng: lng);
       },
     );
 
-    // ── STEP 6: Start local heartbeat timer ─────────────────────
+    // ── STEP 4: Start local heartbeat timer ─────────────────────
     // Updates the local record every 10 seconds even without
     // location movement to keep last_heartbeat_at fresh.
     _serverHeartbeatTimer?.cancel();
@@ -149,14 +149,14 @@ class SosOrchestrator {
 
     _currentResult = SosResult(
       eventId: eventId,
-      layer1Gps: gpsResult,
-      layer2Cell: cellResult,
-      layer3Mesh: meshResult,
-      smsResult: smsResult,
+      layer1Gps: const GpsLayerResult(success: false),
+      layer2Cell: const CellLayerResult(success: false),
+      layer3Mesh: false,
+      smsResult: const SmsSendResult(attempted: 0, succeeded: 0),
       triggeredAt: DateTime.fromMillisecondsSinceEpoch(triggeredAt),
     );
 
-    debugPrint('[SOS] All layers complete — $_currentResult');
+    debugPrint('[SOS] SOS Triggered — waves firing in background');
     return _currentResult!;
   }
 
@@ -205,34 +205,108 @@ class SosOrchestrator {
 
   // ── PRIVATE HELPERS ──────────────────────────────────────────
 
-  static Future<GpsLayerResult> _fireLayer1Gps() async {
+  static Future<bool> _fireLayer1Gps(String eventId) async {
     final pos = await LocationService.capture();
-    return GpsLayerResult(
-      success: pos != null,
-      latitude: pos?.latitude,
-      longitude: pos?.longitude,
-      accuracy: pos?.accuracy,
-    );
+    await LocalDb.updateSosEvent(eventId, {
+      'lat_at_trigger': pos?.latitude,
+      'lng_at_trigger': pos?.longitude,
+      'layer1_gps': pos != null ? 1 : 0,
+    });
+    debugPrint('[SOS] Wave 1 (GPS) complete');
+    return pos != null;
   }
 
-  static Future<CellLayerResult> _fireLayer2CellTower() async {
+  static Future<bool> _fireLayer2CellTower(String eventId) async {
     final data = await CellTowerService.read();
-    return CellLayerResult(
-      success: data?.hasData ?? false,
-      data: data,
-    );
+    await LocalDb.updateSosEvent(eventId, {
+      'cell_mcc': data?.mcc,
+      'cell_mnc': data?.mnc,
+      'cell_lac': data?.lac,
+      'cell_cid': data?.cid,
+      'layer2_cell': (data?.hasData ?? false) ? 1 : 0,
+    });
+    debugPrint('[SOS] Wave 2 (Cell Tower) complete');
+    return data?.hasData ?? false;
   }
 
   static Future<bool> _fireLayer3Bluetooth({
     required String userId,
     required int triggeredAt,
+    required String eventId,
   }) async {
-    return BluetoothMeshService.broadcastSos(
+    final success = await BluetoothMeshService.broadcastSos(
       userId: userId,
       latitude: LocationService.lastKnown?.latitude,
       longitude: LocationService.lastKnown?.longitude,
       triggeredAt: triggeredAt,
     );
+    await LocalDb.updateSosEvent(eventId, {
+      'layer3_mesh': success ? 1 : 0,
+    });
+    debugPrint('[SOS] Wave 3 (Bluetooth Mesh) complete');
+    return success;
+  }
+
+  static Future<bool> _fireLayer4BackendAPI(String eventId) async {
+    try {
+      final pos = LocationService.lastKnown;
+      final cell = await CellTowerService.read();
+
+      final response = await ApiService().triggerSos(
+        id: eventId,
+        lat: pos?.latitude ?? 0.0,
+        lng: pos?.longitude ?? 0.0,
+        accuracyM: pos?.accuracy ?? 0.0,
+        cellCid: cell?.cid,
+        cellLac: cell?.lac,
+      );
+
+      final isSuccessful = (response['data']?['status'] == 'ACTIVE' ||
+          response['data']?['status'] == 'DISPATCHING');
+
+      await LocalDb.updateSosEvent(eventId, {
+        'api_reached': 1,
+        'services_notified': isSuccessful ? 1 : 0,
+      });
+      debugPrint(
+          '[SOS] Wave 4 (Backend API) complete - Success: $isSuccessful');
+      return isSuccessful;
+    } catch (e) {
+      debugPrint('[SOS] Wave 4 (Backend API) failed: $e');
+
+      // Enqueue for offline sync if it failed
+      final pos = LocationService.lastKnown;
+      final cell = await CellTowerService.read();
+
+      unawaited(OfflineSyncService.instance.enqueueRequest(
+        endpoint: '/api/mobile/sos/trigger',
+        method: 'POST',
+        payload: {
+          'id': eventId,
+          'lat': pos?.latitude ?? 0.0,
+          'lng': pos?.longitude ?? 0.0,
+          'accuracyM': pos?.accuracy ?? 0.0,
+          if (cell?.cid != null) 'cellCid': cell?.cid,
+          if (cell?.lac != null) 'cellLac': cell?.lac,
+        },
+      ));
+      return false;
+    }
+  }
+
+  static Future<bool> _fireLayer5Sms(String eventId) async {
+    final pos = LocationService.lastKnown;
+    final smsResult = await SmsService.dispatch(
+      latitude: pos?.latitude,
+      longitude: pos?.longitude,
+    );
+    await LocalDb.updateSosEvent(eventId, {
+      'sms_sent': smsResult.anySucceeded ? 1 : 0,
+      'sms_contacts': smsResult.succeeded,
+    });
+    debugPrint(
+        '[SOS] Wave 5 (SMS) complete - Success: ${smsResult.anySucceeded}');
+    return smsResult.anySucceeded;
   }
 
   static void _onHeartbeatTick({
@@ -248,7 +322,16 @@ class SosOrchestrator {
       'last_heartbeat_at': now,
       'synced': 0,
     });
-    // Phase 14 sends each tick to the backend here.
+
+    // Phase 14: Send heartbeat to backend if online
+    if (lat != null && lng != null) {
+      unawaited(ApiService().sendHeartbeat(
+        sosId: eventId,
+        lat: lat,
+        lng: lng,
+      ));
+    }
+
     debugPrint('[SOS] Heartbeat: $lat, $lng at $now');
   }
 

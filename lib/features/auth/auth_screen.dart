@@ -225,21 +225,35 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             fontWeight: FontWeight.bold,
                             fontSize: 18)),
                   ),
-                  const SizedBox(height: 32),
-                  TextButton(
+                  const SizedBox(height: 16),
+                  // Sign Up Choice
+                  OutlinedButton(
                     onPressed: () => context.push('/signup'),
-                    child: RichText(
-                      text: TextSpan(
-                        text: "${AppTranslations.t('auth_choice_sub')} ",
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                        children: [
-                          TextSpan(
-                            text: AppTranslations.t('sign_up'),
-                            style: const TextStyle(
-                                color: Color(0xFF003333),
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.black, width: 2),
+                      minimumSize: const Size(double.infinity, 60),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Text(
+                      AppTranslations.t('sign_up'),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Guest Access
+                  TextButton(
+                    onPressed: () => context.push('/guest-auth'),
+                    child: Text(
+                      AppTranslations.t('Guest Access'),
+                      style: const TextStyle(
+                        color: AppColors.primaryOrange,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
                     ),
                   ),

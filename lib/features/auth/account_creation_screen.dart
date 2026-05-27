@@ -101,10 +101,17 @@ class _AccountCreationScreenState extends ConsumerState<AccountCreationScreen> {
             emergencyContactName: _emergencyContactNameController.text.trim(),
             emergencyContactPhone: _emergencyContactPhoneController.text.trim(),
             sosPin: _sosPinController.text.trim(),
+            age: 25, // TODO: calculate from DOB or pass from signupData
+            gender: widget.signupData!.gender,
+            province: widget.signupData!.province,
+            community: widget.signupData!.community,
+            faceImageHash: widget.signupData!.faceImageHash,
+            faceImageUrl: widget.signupData!.faceImageUrl,
+            verificationToken: widget.signupData!.verificationToken,
           );
 
       if (mounted) {
-        context.go('/biometric-setup');
+        context.go('/home');
       }
     } catch (error) {
       setState(() => _errorMessage =
@@ -144,7 +151,7 @@ class _AccountCreationScreenState extends ConsumerState<AccountCreationScreen> {
                 controller: _nameController,
                 readOnly: true,
                 decoration: InputDecoration(
-                  labelText: AppTranslations.t('full_name'),
+                  labelText: AppTranslations.t('full name'),
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -153,7 +160,7 @@ class _AccountCreationScreenState extends ConsumerState<AccountCreationScreen> {
                 controller: _idController,
                 readOnly: true,
                 decoration: InputDecoration(
-                  labelText: AppTranslations.t('id_number'),
+                  labelText: AppTranslations.t('id number'),
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -166,10 +173,12 @@ class _AccountCreationScreenState extends ConsumerState<AccountCreationScreen> {
                   border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
-                  if (value?.trim().isEmpty ?? true)
+                  if (value?.trim().isEmpty ?? true) {
                     return AppTranslations.t('error_required');
-                  if (value!.length < 8)
+                  }
+                  if (value!.length < 8) {
                     return AppTranslations.t('error_password_length');
+                  }
                   return null;
                 },
               ),
@@ -178,7 +187,7 @@ class _AccountCreationScreenState extends ConsumerState<AccountCreationScreen> {
                 controller: _confirmPasswordController,
                 obscureText: true,
                 decoration: InputDecoration(
-                  labelText: AppTranslations.t('confirm_password'),
+                  labelText: AppTranslations.t('confirm password'),
                   border: const OutlineInputBorder(),
                 ),
                 validator: (value) => value?.trim().isEmpty ?? true
@@ -189,7 +198,7 @@ class _AccountCreationScreenState extends ConsumerState<AccountCreationScreen> {
               TextFormField(
                 controller: _emergencyContactNameController,
                 decoration: InputDecoration(
-                  labelText: AppTranslations.t('emergency_contact_name'),
+                  labelText: AppTranslations.t('emergency contact name'),
                   border: const OutlineInputBorder(),
                 ),
                 validator: (value) => value?.trim().isEmpty ?? true
@@ -219,10 +228,12 @@ class _AccountCreationScreenState extends ConsumerState<AccountCreationScreen> {
                   border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
-                  if (value?.trim().isEmpty ?? true)
+                  if (value?.trim().isEmpty ?? true) {
                     return AppTranslations.t('error_required');
-                  if (value!.length != 4)
+                  }
+                  if (value!.length != 4) {
                     return AppTranslations.t('error_4_digits_required');
+                  }
                   if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
                     return AppTranslations.t('error_numbers_only');
                   }

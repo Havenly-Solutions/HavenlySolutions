@@ -60,6 +60,7 @@ class BluetoothMeshService {
 
   static bool _isAdvertising = false;
   static bool _isDiscovering = false;
+  static final Set<String> _connectedEndpoints = {};
 
   static bool get isActive => _isAdvertising || _isDiscovering;
 
@@ -101,6 +102,7 @@ class BluetoothMeshService {
         },
         onConnectionResult: (endpointId, status) {
           if (status == Status.CONNECTED) {
+            _connectedEndpoints.add(endpointId);
             // Send the SOS packet to the connected relay device.
             Nearby().sendBytesPayload(
               endpointId,
@@ -108,7 +110,9 @@ class BluetoothMeshService {
             );
           }
         },
-        onDisconnected: (_) {},
+        onDisconnected: (endpointId) {
+          _connectedEndpoints.remove(endpointId);
+        },
       );
 
       _isAdvertising = true;
@@ -159,8 +163,14 @@ class BluetoothMeshService {
                 },
               );
             },
-            onConnectionResult: (_, __) {},
-            onDisconnected: (_) {},
+            onConnectionResult: (endpointId, status) {
+              if (status == Status.CONNECTED) {
+                _connectedEndpoints.add(endpointId);
+              }
+            },
+            onDisconnected: (endpointId) {
+              _connectedEndpoints.remove(endpointId);
+            },
           );
         },
         onEndpointLost: (_) {},
@@ -225,6 +235,20 @@ class BluetoothMeshService {
     Nearby().stopAllEndpoints();
     _isAdvertising = false;
     _isDiscovering = false;
+  }
+
+  /// Sends raw bytes to all connected endpoints.
+  /// Used for Mesh Chat (Section 15).
+  static Future<void> sendBytesToAll(Uint8List bytes) async {
+    if (!Platform.isAndroid) return;
+    
+    for (final endpointId in _connectedEndpoints) {
+      try {
+        await Nearby().sendBytesPayload(endpointId, bytes);
+      } catch (e) {
+        debugPrint('[BT Mesh] Failed to send to $endpointId: $e');
+      }
+    }
   }
 
   // ── PRIVATE ──────────────────────────────────────────────────

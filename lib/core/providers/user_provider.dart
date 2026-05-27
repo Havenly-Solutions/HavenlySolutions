@@ -4,7 +4,6 @@ import '../models/user.dart';
 import '../services/api_service.dart';
 import '../security/secure_storage_service.dart';
 
-final apiServiceProvider = Provider((ref) => ApiService());
 
 final userProvider = StateNotifierProvider<UserNotifier, User?>((ref) {
   return UserNotifier(ref.watch(apiServiceProvider));
@@ -18,6 +17,10 @@ class UserNotifier extends StateNotifier<User?> {
   }
 
   Future<void> _init() async {
+    await fetchCurrentUser();
+  }
+
+  Future<void> fetchCurrentUser() async {
     final token = await SecureStorageService.getAccessToken();
     if (token != null) {
       try {
@@ -58,6 +61,13 @@ class UserNotifier extends StateNotifier<User?> {
     required String emergencyContactName,
     required String emergencyContactPhone,
     required String sosPin,
+    int? age,
+    String? gender,
+    String? province,
+    String? community,
+    String? faceImageHash,
+    String? faceImageUrl,
+    String? verificationToken,
   }) async {
     final response = await _apiService.signup(
       fullName: fullName,
@@ -71,6 +81,13 @@ class UserNotifier extends StateNotifier<User?> {
       emergencyContactName: emergencyContactName,
       emergencyContactPhone: emergencyContactPhone,
       sosPin: sosPin,
+      age: age,
+      gender: gender,
+      province: province,
+      community: community,
+      faceImageHash: faceImageHash,
+      faceImageUrl: faceImageUrl,
+      verificationToken: verificationToken,
     );
     state = response.user;
     await SecureStorageService.saveUserId(response.user.id);

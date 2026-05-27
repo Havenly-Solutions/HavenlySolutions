@@ -7,6 +7,7 @@ class SecureStorageService {
 
   static const kAccessToken = 'access_token';
   static const kRefreshToken = 'refresh_token';
+  static const kGuestToken = 'guest_token';
   static const kUserId = 'user_id';
   static const kUserRole = 'user_role';
   static const kPinHash = 'pin_hash';
@@ -55,6 +56,15 @@ class SecureStorageService {
       _storage.delete(key: _sessionStart),
     ]);
   }
+
+  // ── GUEST TOKEN MANAGEMENT ──────────────────────────────────
+
+  static Future<void> saveGuestToken(String token) =>
+      _storage.write(key: kGuestToken, value: token);
+
+  static Future<String?> getGuestToken() => _storage.read(key: kGuestToken);
+
+  static Future<void> clearGuestToken() => _storage.delete(key: kGuestToken);
 
   // ── USER IDENTITY ─────────────────────────────────────────
 

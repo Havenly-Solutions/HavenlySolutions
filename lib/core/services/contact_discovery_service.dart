@@ -42,15 +42,14 @@ class ContactDiscoveryService {
         final fullName = userData['fullName'];
 
         // Upsert into local SQLite contacts table
-        // (Assuming we have a contacts table as per Section 7)
-        // await LocalDb.upsertContact({
-        //   'id': userId,
-        //   'phone_hash': hash,
-        //   'display_name': hashMap[hash] ?? fullName,
-        //   'is_havenly_user': 1,
-        //   'havenly_user_id': userId,
-        //   'last_synced': DateTime.now().millisecondsSinceEpoch,
-        // });
+        await LocalDb.upsertContact({
+          'id': userId,
+          'phone_hash': hash,
+          'display_name': hashMap[hash] ?? fullName,
+          'is_havenly_user': 1,
+          'havenly_user_id': userId,
+          'last_synced': DateTime.now().millisecondsSinceEpoch,
+        });
       }
     } catch (e) {
       print('[ContactDiscovery] Sync failed: $e');

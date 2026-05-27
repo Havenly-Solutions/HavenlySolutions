@@ -213,7 +213,7 @@ class ChatScreen extends ConsumerWidget {
                                   color: Colors.grey[200],
                                   borderRadius: BorderRadius.circular(4)),
                               child: Text(AppTranslations.t('moderated'),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 8,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.blueGrey)),
@@ -248,7 +248,7 @@ class ChatScreen extends ConsumerWidget {
                     onPressed: () =>
                         context.push('/chat/community?title=\$title'),
                     child: Text(AppTranslations.t('join_room'),
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                             color: Colors.black))),

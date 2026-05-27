@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/feed_post.dart';
 import '../services/api_service.dart';
-import 'user_provider.dart';
 
 class FeedState {
   final List<FeedPost> posts;
@@ -41,7 +40,9 @@ final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
 });
 
 class FeedNotifier extends StateNotifier<FeedState> {
-  FeedNotifier(ApiService apiService) : super(FeedState()) {
+  final ApiService _apiService;
+
+  FeedNotifier(this._apiService) : super(FeedState()) {
     fetchPosts();
   }
 
@@ -49,15 +50,21 @@ class FeedNotifier extends StateNotifier<FeedState> {
     if (state.isLoading || (!state.hasMore && !refresh)) return;
 
     if (refresh) {
-      state = state.copyWith(posts: [], page: 1, hasMore: true, isLoading: true);
+      state =
+          state.copyWith(posts: [], page: 1, hasMore: true, isLoading: true);
     } else {
       state = state.copyWith(isLoading: true);
     }
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
-      
-      final List<FeedPost> newPosts = []; // Assuming empty if no backend yet
+      final response = await _apiService.getPosts(
+        page: state.page,
+        limit: 20,
+      );
+
+      final List<dynamic> postsJson = response['posts'];
+      final newPosts =
+          postsJson.map((json) => FeedPost.fromJson(json)).toList();
 
       state = state.copyWith(
         posts: [...state.posts, ...newPosts],
@@ -70,7 +77,13 @@ class FeedNotifier extends StateNotifier<FeedState> {
     }
   }
 
-  Future<void> createPost(FeedPost post) async {
-    state = state.copyWith(posts: [post, ...state.posts]);
+  Future<void> createPost(Map<String, dynamic> data) async {
+    try {
+      final response = await _apiService.createPost(data);
+      final newPost = FeedPost.fromJson(response);
+      state = state.copyWith(posts: [newPost, ...state.posts]);
+    } catch (e) {
+      // Handle error
+    }
   }
 }

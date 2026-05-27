@@ -12,7 +12,7 @@ class AppTranslations {
     var text = translations[key] ?? key;
     if (args != null && args.isNotEmpty) {
       for (var i = 0; i < args.length; i++) {
-        text = text.replaceAll('\$${i}', args[i]);
+        text = text.replaceAll('\$$i', args[i]);
       }
     }
     return text;

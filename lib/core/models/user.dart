@@ -5,6 +5,10 @@ class User {
   final String email;
   final String phone;
   final String? profilePhotoUrl;
+  final int? age;
+  final String? gender;
+  final String? province;
+  final String? status;
   final String communityId;
   final String communityArea;
   final SubscriptionTier tier;
@@ -22,6 +26,10 @@ class User {
     required this.email,
     required this.phone,
     this.profilePhotoUrl,
+    this.age,
+    this.gender,
+    this.province,
+    this.status,
     required this.communityId,
     required this.communityArea,
     this.tier = SubscriptionTier.free,
@@ -41,7 +49,11 @@ class User {
       email: json['email'] as String,
       phone: json['phone'] as String,
       profilePhotoUrl: json['profilePhotoUrl'] as String?,
-      communityId: json['communityId'] as String,
+      age: json['age'] as int?,
+      gender: json['gender'] as String?,
+      province: json['province'] as String?,
+      status: json['status'] as String?,
+      communityId: json['communityId'] as String? ?? '',
       communityArea: json['communityArea'] as String,
       tier: SubscriptionTier.values.byName(json['tier'] as String? ?? 'free'),
       pinSet: json['pinSet'] as bool? ?? false,
@@ -64,6 +76,10 @@ class User {
       'email': email,
       'phone': phone,
       'profilePhotoUrl': profilePhotoUrl,
+      'age': age,
+      'gender': gender,
+      'province': province,
+      'status': status,
       'communityId': communityId,
       'communityArea': communityArea,
       'tier': tier.name,
@@ -83,6 +99,10 @@ class User {
     String? email,
     String? phone,
     String? profilePhotoUrl,
+    int? age,
+    String? gender,
+    String? province,
+    String? status,
     String? communityId,
     String? communityArea,
     SubscriptionTier? tier,
@@ -100,6 +120,10 @@ class User {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+      province: province ?? this.province,
+      status: status ?? this.status,
       communityId: communityId ?? this.communityId,
       communityArea: communityArea ?? this.communityArea,
       tier: tier ?? this.tier,

@@ -1,4 +1,5 @@
-enum PostType { standard, missingPerson }
+enum PostType { standard, missingPerson, alert, story }
+enum MissingStatus { MISSING, FOUND, DECEASED }
 
 class FeedPost {
   final String id;
@@ -18,9 +19,12 @@ class FeedPost {
   final String? mpName;
   final String? mpSurname;
   final int? mpAge;
+  final String? mpGender;
+  final String? mpRace; // Analytics only
   final String? mpLastSeen;
   final String? mpContactName;
   final String? mpContactPhone;
+  final MissingStatus? mpStatus;
 
   FeedPost({
     required this.id,
@@ -38,9 +42,12 @@ class FeedPost {
     this.mpName,
     this.mpSurname,
     this.mpAge,
+    this.mpGender,
+    this.mpRace,
     this.mpLastSeen,
     this.mpContactName,
     this.mpContactPhone,
+    this.mpStatus,
   });
 
   factory FeedPost.fromJson(Map<String, dynamic> json) {
@@ -60,9 +67,14 @@ class FeedPost {
       mpName: json['mpName'] as String?,
       mpSurname: json['mpSurname'] as String?,
       mpAge: json['mpAge'] as int?,
+      mpGender: json['mpGender'] as String?,
+      mpRace: json['mpRace'] as String?,
       mpLastSeen: json['mpLastSeen'] as String?,
       mpContactName: json['mpContactName'] as String?,
       mpContactPhone: json['mpContactPhone'] as String?,
+      mpStatus: json['mpStatus'] != null 
+          ? MissingStatus.values.byName(json['mpStatus'] as String)
+          : null,
     );
   }
 }

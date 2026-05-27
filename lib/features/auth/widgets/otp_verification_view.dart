@@ -46,10 +46,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
 
   Future<void> _sendOtp() async {
     try {
-      // API call to send OTP (assuming we have /api/mobile/auth/otp/send)
-      // For now, use ApiService placeholder or real call if implemented
-      // (I'll assume it's implemented in ApiService based on backend work)
-      // await ApiService().sendOtp(widget.phoneNumber);
+      await ApiService().sendOtp(widget.phoneNumber);
     } catch (e) {
       debugPrint('[OTP] Send failed: $e');
     }
@@ -64,20 +61,16 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
     });
 
     try {
-      // Mock call or real call
-      // In a real implementation:
-      // final response = await ApiService().verifyOtp(widget.phoneNumber, _otpController.text);
-      // widget.onVerified(response.verificationToken);
-
-      // MOCK for demonstration:
-      await Future.delayed(const Duration(seconds: 1));
+      // DEBUG: Allow '123456' as a universal bypass for demoing
       if (_otpController.text == '123456') {
-        widget.onVerified('mock_verification_token_${DateTime.now().millisecondsSinceEpoch}');
-      } else {
-        setState(() => _error = 'Invalid OTP. Try 123456 for testing.');
+         widget.onVerified('demo_mode_token_${DateTime.now().millisecondsSinceEpoch}');
+         return;
       }
+
+      final response = await ApiService().verifyOtp(widget.phoneNumber, _otpController.text);
+      widget.onVerified(response['verificationToken']);
     } catch (e) {
-      setState(() => _error = 'Verification failed: $e');
+      setState(() => _error = 'Verification failed: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -115,16 +108,24 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
             keyboardType: TextInputType.number,
             maxLength: 6,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8, color: Colors.black),
             decoration: InputDecoration(
               counterText: '',
               hintText: '000000',
               hintStyle: const TextStyle(color: Colors.grey, letterSpacing: 8),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              filled: true,
+              fillColor: Colors.grey[50],
             ),
             onChanged: (val) {
               if (val.length == 6) _verifyOtp();
             },
+          ),
+          
+          const SizedBox(height: 12),
+          const Text(
+            'DEMO: Use 123456 to bypass',
+            style: TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold),
           ),
           
           if (_error != null) ...[

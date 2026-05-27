@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../core/providers/user_provider.dart';
+import '../../core/providers/location_provider.dart';
 import '../../core/constants/translations.dart';
 import '../../core/theme/app_typography.dart';
 import 'widgets/sos_button.dart';
@@ -43,27 +45,27 @@ class HomeScreen extends ConsumerWidget {
           ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text(AppTranslations.t('good_morning', args: [firstName]),
+              Text(AppTranslations.t('Good Morning', args: [firstName]),
                   style: const TextStyle(
                       fontSize: 24, fontWeight: FontWeight.w900)),
-              Text(AppTranslations.t('patrol_shift_active'),
+              Text(AppTranslations.t('Patrol Shift Active'),
                   style: TextStyle(color: Colors.grey[600], fontSize: 13)),
               const SizedBox(height: 20),
 
               _buildStatsCard(),
               const SizedBox(height: 20),
 
-              _buildMapSector(),
+              _buildMapSector(ref),
               const SizedBox(height: 24),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(AppTranslations.t('recent_alerts'),
+                  Text(AppTranslations.t('Recent Alerts'),
                       style: AppTypography.heading2),
                   TextButton(
                       onPressed: () {},
-                      child: Text(AppTranslations.t('view_dispatch'),
+                      child: Text(AppTranslations.t('View Dispatch'),
                           style: const TextStyle(
                               color: Colors.blueGrey, fontSize: 12))),
                 ],
@@ -73,20 +75,20 @@ class HomeScreen extends ConsumerWidget {
                   Icons.error_outline,
                   Colors.red[100]!,
                   Colors.red[800]!,
-                  AppTranslations.t('vehicle_theft_in_progress'),
-                  AppTranslations.t('oak_street_dispatch'),
-                  AppTranslations.t('minutes_ago', args: ['2'])),
+                  AppTranslations.t('vehicle theft in progress'),
+                  AppTranslations.t('oak street dispatch'),
+                  AppTranslations.t('minutes ago', args: ['2'])),
               _buildAlertItem(
                   null,
                   Colors.orange[100]!,
                   Colors.orange[800]!,
-                  AppTranslations.t('medical_assistance_needed'),
-                  AppTranslations.t('central_plaza_dispatch'),
-                  AppTranslations.t('minutes_ago', args: ['14']),
+                  AppTranslations.t('medical assistance needed'),
+                  AppTranslations.t('central plaza dispatch'),
+                  AppTranslations.t('minutes ago', args: ['14']),
                   logo: true),
 
               const SizedBox(height: 24),
-              Text(AppTranslations.t('quick_actions'),
+              Text(AppTranslations.t('quick actions'),
                   style: AppTypography.heading2),
               const SizedBox(height: 16),
               _buildQuickActionsGrid(context),
@@ -127,7 +129,7 @@ class HomeScreen extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppTranslations.t('active_alerts'),
+                  Text(AppTranslations.t('active alerts'),
                       style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -150,10 +152,10 @@ class HomeScreen extends ConsumerWidget {
           const Divider(height: 32),
           Row(
             children: [
-              _buildStatDetail(AppTranslations.t('patrol_time'), '05h 12m'),
+              _buildStatDetail(AppTranslations.t('patrol time'), '05h 12m'),
               const Spacer(),
-              _buildStatDetail(AppTranslations.t('area_status'),
-                  AppTranslations.t('high_alert'),
+              _buildStatDetail(AppTranslations.t('area status'),
+                  AppTranslations.t('high alert'),
                   isAlert: true),
             ],
           ),
@@ -178,40 +180,73 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMapSector() {
+  Widget _buildMapSector(WidgetRef ref) {
+    final location = ref.watch(locationProvider);
+
     return Container(
       height: 240,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        image: const DecorationImage(
-            image: AssetImage('assets/images/stay_safe.png'),
-            fit: BoxFit.cover),
+        color: Colors.grey[200],
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black.withOpacity(0.8)]),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(AppTranslations.t('current_sector'),
-                style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold)),
-            Text(AppTranslations.t('north_downtown_transit'),
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold)),
-          ],
-        ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          if (location != null)
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: LatLng(location.latitude, location.longitude),
+                zoom: 15,
+              ),
+              markers: {
+                Marker(
+                  markerId: const MarkerId('current user'),
+                  position: LatLng(location.latitude, location.longitude),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueRed),
+                ),
+              },
+              myLocationEnabled: true,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+            )
+          else
+            const Center(child: CircularProgressIndicator()),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.8)
+                    ]),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(AppTranslations.t('current sector'),
+                      style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold)),
+                  Text(AppTranslations.t('north downtown transit'),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -273,11 +308,11 @@ class HomeScreen extends ConsumerWidget {
       childAspectRatio: 1.6,
       children: [
         _buildActionCard(
-            Icons.edit_document, AppTranslations.t('new_report'), () {}),
-        _buildActionCard(Icons.search, AppTranslations.t('id_lookup'), () {}),
-        _buildActionCard(Icons.radio, AppTranslations.t('radio_sync'), () {}),
+            Icons.edit_document, AppTranslations.t('new report'), () {}),
+        _buildActionCard(Icons.search, AppTranslations.t('id lookup'), () {}),
+        _buildActionCard(Icons.radio, AppTranslations.t('radio sync'), () {}),
         _buildActionCard(
-            Icons.folder_open, AppTranslations.t('documents'), () {}),
+            Icons.folder_open, AppTranslations.t('Documents'), () {}),
       ],
     );
   }
